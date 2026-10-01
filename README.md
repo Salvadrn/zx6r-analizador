@@ -56,6 +56,18 @@ flowchart LR
   WEB -- WiFi --> PH["Celular / laptop"]
 ```
 
+## Qué comprar
+
+La lista completa está en **[`BOM.csv`](BOM.csv)**, con precio aproximado en pesos y liga de cada pieza (precios del 2026-10-01). Va en fases:
+
+| Fase | Qué | Aprox. |
+|---|---|---|
+| 1 · Prueba | Solo el cable adaptador KDS → OBD2, para ver si tu Steren habla con la moto | $707 |
+| 2 · Montaje | Pi 4, microSD, energía, pantalla, montajes, caja, botones, sensor de dirección y cableado | ~$11,300 + envíos |
+| 3 · Condicional | OBDLink EX, solo si el Steren no pasa la prueba | $1,719 |
+
+Los envíos no están incluidos: Pololu, Newhaven y K&J mandan desde EE. UU. En Mouser el envío es gratis desde US$100, y lo que va de Mouser suma ~US$87.
+
 ## Conexión en la moto
 
 La hoja completa, pin por pin, está en **[`docs/conexion.html`](docs/conexion.html)**. Ábrela en el navegador desde la carpeta del repo, porque GitHub no muestra el HTML. Incluye el esquemático, la prueba del protocolo y la lista de compras con marca y modelo. Lo esencial, sacado del manual de servicio (ZX636ED/FD):
@@ -223,7 +235,8 @@ Las dos escriben la misma base y sirven el mismo visor, así que puedes cambiar 
 python/analizador.py   versión Python (un solo archivo)
 cpp/                   versión C++ (CMake)
 web/index.html         visor web; lo sirven las dos versiones
-docs/conexion.html     hoja de conexión y lista de compras
+docs/conexion.html     hoja de conexión
+BOM.csv                lista de materiales con precios y ligas
 docs/*.png, *.jpg      capturas para este README
 ```
 

@@ -1,0 +1,4 @@
+// Generado por CMake desde web/index.html (configure_file); no editar.
+#pragma once
+
+static const char kIndexHtml[] = R"ZX6R(@ZX6R_INDEX_HTML@)ZX6R";

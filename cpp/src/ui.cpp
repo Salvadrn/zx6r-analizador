@@ -708,9 +708,13 @@ void Dash::draw_panel(const Sensor& s, const SensorView& sv, double now, float x
     cv_.frame(px0, py0, px1, py1, BORDER);
     const std::pair<std::optional<double>, Color> limits[] = {
         {s.warn, WARN}, {s.crit, CRIT}, {s.warn_lo, WARN}, {s.crit_lo, CRIT}};
-    for (const auto& lim : limits)
-        if (lim.first && s.y_min < *lim.first && *lim.first < s.y_max)
-            cv_.dashed_hline(px0, px1, ymap(s, py0, py1, *lim.first), S(2), S(6), lim.second);
+    std::vector<float> special;   // y de umbrales y referencias, para no tapar una línea con un rótulo
+    for (const auto& lim : limits) {
+        if (!lim.first || !(s.y_min < *lim.first && *lim.first < s.y_max)) continue;
+        const float ty = ymap(s, py0, py1, *lim.first);
+        cv_.dashed_hline(px0, px1, ty, S(2), S(6), lim.second);
+        special.push_back(ty);
+    }
     for (std::size_t k = 1; k < ticks.size(); ++k)
         cv_.vline(px1 - static_cast<float>(ticks[k] / window) * (px1 - px0), py0, py1, GRID);
     const double rng = s.y_max - s.y_min;
@@ -720,12 +724,20 @@ void Dash::draw_panel(const Sensor& s, const SensorView& sv, double now, float x
         cv_.hline(px0, px1, gy, GRID);
         cv_.text(MONO, S(11), axis_label(gv, rng / 4), px0 - S(8), gy, Anchor::E, TEXT3);
     }
-    std::vector<std::pair<float, const char*>> ref_labels;
+    std::vector<const RefLine*> refs;
     for (const RefLine& ref : REFS) {
         if (std::strcmp(ref.sensor, s.id) != 0 || !(s.y_min < ref.value && ref.value < s.y_max)) continue;
-        const float ry = ymap(s, py0, py1, ref.value);
+        refs.push_back(&ref);
+        special.push_back(ymap(s, py0, py1, ref.value));
+    }
+    std::vector<std::pair<float, const char*>> ref_labels;
+    for (const RefLine* ref : refs) {
+        const float ry = ymap(s, py0, py1, ref->value);
         cv_.dashed_hline(px0, px1, ry, S(5), S(5), REF_LINE);
-        ref_labels.push_back({ry - S(9) > py0 + S(26) ? ry - S(9) : ry + S(10), ref.label});
+        // abajo de su línea si no cabe arriba o si otra línea especial queda justo arriba
+        const bool crowded = std::any_of(special.begin(), special.end(),
+                                         [&](float oy) { return ry - S(22) < oy && oy < ry; });
+        ref_labels.push_back({ry - S(9) > py0 + S(26) && !crowded ? ry - S(9) : ry + S(10), ref->label});
     }
 
     // traza, punto final, rótulos de referencia y mensaje
@@ -762,7 +774,12 @@ void Dash::draw_panel(const Sensor& s, const SensorView& sv, double now, float x
         msg = buf;
         mc = WARN;
     }
-    cv_.text(SANS_BOLD, S(15), msg, (px0 + px1) / 2, (py0 + py1) / 2, Anchor::C, mc);
+    if (!msg.empty()) {   // con fondo negro para que no lo tache una línea
+        const float mx = (px0 + px1) / 2, my = (py0 + py1) / 2;
+        const float mw = cv_.width(SANS_BOLD, S(15), msg), mh = cv_.box_height(SANS_BOLD, S(15));
+        cv_.rect(mx - mw / 2 - S(10), my - mh / 2 - S(4), mx + mw / 2 + S(10), my + mh / 2 + S(4), BG);
+        cv_.text(SANS_BOLD, S(15), msg, mx, my, Anchor::C, mc);
+    }
 }
 
 // Puntos de la ventana: "ahora" siempre en el borde derecho

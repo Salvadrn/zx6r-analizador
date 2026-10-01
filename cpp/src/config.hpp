@@ -17,5 +17,7 @@ struct Config {
     int web_port = 8080;                    // OBD2_WEB_PORT (0 = apagado)
     std::string font_sans, font_mono;       // OBD2_FONT_SANS_FILE / OBD2_FONT_MONO_FILE
     std::string snapshot_dir;               // OBD2_SNAPSHOT_DIR: guarda un PNG por vista y sale
-    std::array<bool, SENSOR_COUNT> active{};  // sensores que se leen (MAP DER con OBD2_MAP_R=1)
+    int i2c_bus = 1;                        // OBD2_I2C_BUS: /dev/i2c-1 en la Raspberry Pi (AS5600 de la dirección)
+    std::string steer_cal;                  // OBD2_STEER_CAL (default <carpeta de OBD2_DB>/direccion.json)
+    std::array<bool, SENSOR_COUNT> active{};  // sensores que se leen (MAP DER con OBD2_MAP_R=1, dirección salvo OBD2_STEER=0)
 };

@@ -12,8 +12,11 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set(CMAKE_BUILD_TYPE Release CACHE STRING "Tipo de build" FORCE)
 endif()
 
-# ── raylib 5.5 (se baja y se compila con el proyecto) ──
+# ── raylib 5.5: se baja el tarball del tag (42 MB; clonar el repo bajaba 347 MB) y se compila con el proyecto ──
 include(FetchContent)
+if(POLICY CMP0135)
+  cmake_policy(SET CMP0135 NEW)   # los archivos extraídos llevan la hora de extracción
+endif()
 set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(BUILD_GAMES OFF CACHE BOOL "" FORCE)
 # Raspberry Pi: Mesa (V3D) no da OpenGL 3.3 core, que es el default de raylib
@@ -21,9 +24,8 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm|
   set(OPENGL_VERSION "2.1" CACHE STRING "Versión de OpenGL para raylib")
 endif()
 FetchContent_Declare(raylib
-  GIT_REPOSITORY https://github.com/raysan5/raylib.git
-  GIT_TAG 5.5
-  GIT_SHALLOW TRUE)
+  URL https://github.com/raysan5/raylib/archive/refs/tags/5.5.tar.gz
+  URL_HASH SHA256=aea98ecf5bc5c5e0b789a76de0083a21a70457050ea4cc2aec7566935f5e258e)
 FetchContent_MakeAvailable(raylib)
 
 find_package(SQLite3 REQUIRED)   # macOS: viene en el SDK; Raspberry Pi: libsqlite3-dev
@@ -43,6 +45,7 @@ configure_file(src/web_index.hpp.in "${CMAKE_CURRENT_BINARY_DIR}/generated/web_i
 add_executable(zx6r
   src/main.cpp
   src/obd.cpp
+  src/steer.cpp
   src/store.cpp
   src/web.cpp
   src/ui.cpp)

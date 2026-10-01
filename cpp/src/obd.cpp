@@ -278,6 +278,7 @@ double sim_value(const Sensor& s, double t) {
         case Parse::MapL: return clampd(30 + load * 0.72 + 5 * std::sin(t * 2.1), 20, 105);
         case Parse::MapR: return clampd(28 + load * 0.74 + 5 * std::sin(t * 2.1 + 0.3), 20, 105);
         case Parse::Battery: return 13.9 + 0.15 * std::sin(t * 0.7);
+        case Parse::Steer: break;   // la simula su propio hilo (steer.cpp)
     }
     return 0.0;
 }
@@ -385,7 +386,7 @@ bool Reader::pause(double seconds) {
     return !cv_.wait_for(lk, std::chrono::duration<double>(seconds), [this] { return stop_.load(); });
 }
 
-// Simulador: todos los sensores activos en cada tick (10 Hz)
+// Simulador: todos los sensores OBD activos en cada tick (10 Hz); la dirección va en su propio hilo
 void Reader::run_sim() {
     tel_.set_state(LinkState::Sim);
     const auto period = std::chrono::duration_cast<Clock::duration>(std::chrono::duration<double>(1.0 / SIM_HZ));
@@ -393,7 +394,7 @@ void Reader::run_sim() {
     while (!stop_) {
         const double t = tel_.elapsed();
         for (std::size_t i = 0; i < SENSOR_COUNT; ++i)
-            if (cfg_.active[i]) tel_.record(i, t, sim_value(SENSORS[i], t));
+            if (cfg_.active[i] && is_obd(SENSORS[i])) tel_.record(i, t, sim_value(SENSORS[i], t));
         next = std::max(next + period, Clock::now());
         std::unique_lock<std::mutex> lk(mu_);
         if (cv_.wait_until(lk, next, [this] { return stop_.load(); })) break;
@@ -405,7 +406,7 @@ void Reader::run_elm() {
     Elm elm(stop_);
     std::vector<std::size_t> fast, slow;
     for (std::size_t i = 0; i < SENSOR_COUNT; ++i)
-        if (cfg_.active[i]) (SENSORS[i].period <= 0 ? fast : slow).push_back(i);
+        if (cfg_.active[i] && is_obd(SENSORS[i])) (SENSORS[i].period <= 0 ? fast : slow).push_back(i);
     std::array<double, SENSOR_COUNT> last_read;
     last_read.fill(-1e9);
 

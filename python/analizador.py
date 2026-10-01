@@ -970,7 +970,7 @@ class Dash:
         c.create_text(x + w - S(22), y + S(30), anchor="e", text=s["desc"], fill=TEXT3,
                       font=self.f("sans", S(12)))
         vchars = max(len(_fmt(s, s["y_min"])), len(_fmt(s, s["y_max"])))
-        vpx = int(min(h * 0.36, w * 0.5 / (vchars * 0.62)))
+        vpx = int(min(h * 0.36, w * 0.58 / (vchars * 0.62)))
         xr = x + pad + self.measure("mono", vpx, True, "0") * vchars
         vy = y + h * 0.46
         val = c.create_text(xr, vy, anchor="e", text="--", fill=STALE, font=self.f("mono", vpx, True))

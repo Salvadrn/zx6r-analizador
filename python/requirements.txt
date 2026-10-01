@@ -1,0 +1,4 @@
+# La versión Python solo usa la biblioteca estándar: Python 3.9+ con Tk
+# (macOS: brew install python-tk@3.14 · Raspberry Pi: sudo apt install python3-tk).
+# Opcional, botones del manubrio por GPIO en una Raspberry Pi:
+# gpiozero

@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ZX-6R · Telemetría</title>
+<!-- Visor que sirven las dos versiones (Python y C++). Sin dependencias externas:
+     el celular conectado al WiFi del ELM327 no tiene internet. -->
+<style>
+:root{--bg:#000;--line:#262626;--grid:#161616;--t:#f0f0f0;--t2:#9a9a9a;--t3:#666;--stale:#444;--ok:#6fb583;--warn:#d6a24a;--crit:#d65c57}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--t);font:14px/1.4 -apple-system,"Helvetica Neue","Segoe UI","DejaVu Sans",Arial,sans-serif}
+header{position:sticky;top:0;z-index:1;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;padding:12px 16px;background:var(--bg);border-bottom:1px solid var(--line)}
+.brand{font-weight:700;font-size:20px}
+.sub{color:var(--t3);font-size:11px;font-weight:700;letter-spacing:.22em}
+nav{display:flex;gap:18px}
+nav a{color:var(--t3);font-weight:700;font-size:13px;letter-spacing:.06em;padding:4px 0;border-bottom:2px solid transparent;cursor:pointer;user-select:none}
+nav a.on{color:var(--t);border-color:var(--t)}
+.chip{margin-left:auto;display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:99px;padding:5px 12px;font-size:12px;font-weight:700;color:var(--t2)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--t3)}
+main{padding:16px;max-width:1200px;margin:0 auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.card{border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.head{display:flex;justify-content:space-between;gap:8px}
+.lbl{color:var(--t2);font-size:12px;font-weight:700;letter-spacing:.14em}
+.desc{color:var(--t3);font-size:12px;text-align:right}
+.val{font:700 44px/1.1 Menlo,"SF Mono","DejaVu Sans Mono",Consolas,monospace;margin:10px 0 8px}
+.val small{font:400 16px -apple-system,"Helvetica Neue",Arial,sans-serif;color:var(--t2);margin-left:6px}
+canvas{display:block;width:100%}
+.muted{color:var(--t3);font-size:12px}
+table{width:100%;border-collapse:collapse}
+th,td{padding:11px 8px;border-bottom:1px solid var(--line);text-align:left;font-size:13px}
+th{color:var(--t3);font-size:11px;font-weight:700;letter-spacing:.14em}
+tr.s{cursor:pointer}
+tr.s:hover td{background:#0b0b0b}
+.mono{font-family:Menlo,"DejaVu Sans Mono",monospace}
+.tag{border:1px solid var(--line);border-radius:4px;padding:1px 6px;font-size:11px;color:var(--warn)}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin:0 0 14px}
+.btn{color:var(--t);background:none;border:1px solid var(--line);border-radius:8px;padding:7px 12px;font:inherit;font-size:13px;text-decoration:none;cursor:pointer}
+.right{margin-left:auto}
+.scroll{overflow-x:auto}
+.nowrap{white-space:nowrap}
+@media (max-width:480px){.wide{display:none}.val{font-size:38px}}
+</style>
+</head>
+<body>
+<header>
+  <span class="brand">ZX-6R</span><span class="sub">TELEMETRÍA</span>
+  <nav><a id="tab-live" class="on">EN VIVO</a><a id="tab-hist">SESIONES</a></nav>
+  <span class="chip"><span class="dot" id="dot"></span><span id="state">—</span></span>
+</header>
+<main id="live"><div class="grid" id="cards"></div><p class="muted" id="info"></p></main>
+<main id="hist" hidden><div id="list"></div><div id="detail"></div></main>
+<script>
+const $ = id => document.getElementById(id);
+const COL = {grid: "#161616", text: "#f0f0f0", t3: "#666", stale: "#444", ok: "#6fb583", warn: "#d6a24a", crit: "#d65c57"};
+const STATES = {sim: ["SIMULADOR", COL.warn], live: ["OBD2 EN VIVO", COL.ok], connecting: ["CONECTANDO", COL.warn], lost: ["SIN CONEXIÓN", COL.crit]};
+const fmt = (m, v) => v == null ? "--" : Number(v).toFixed(m.dec);
+const clock = s => {
+  s = Math.max(0, Math.round(s));
+  const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), ss = String(s % 60).padStart(2, "0");
+  return h ? `${h}:${String(m).padStart(2, "0")}:${ss}` : `${m}:${ss}`;
+};
+function zone(m, v) {
+  if ((m.crit != null && v >= m.crit) || (m.crit_lo != null && v <= m.crit_lo)) return COL.crit;
+  if ((m.warn != null && v >= m.warn) || (m.warn_lo != null && v <= m.warn_lo)) return COL.warn;
+  return COL.text;
+}
+
+// gráfica de línea en canvas; axes = rótulos de eje (vista de sesión)
+function plot(cv, t, v, m, t0, t1, axes, stale) {
+  const r = devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight;
+  cv.width = W * r; cv.height = H * r;
+  const g = cv.getContext("2d");
+  g.scale(r, r);
+  const L = axes ? 44 : 0, B = axes ? 20 : 0, T = axes ? 8 : 2, pw = W - L - 4, ph = H - B - T - 2;
+  const X = x => L + (x - t0) / ((t1 - t0) || 1) * pw;
+  const Y = y => T + ph - Math.min(Math.max((y - m.y_min) / (m.y_max - m.y_min), 0), 1) * ph;
+  g.font = "10px Menlo, monospace"; g.fillStyle = COL.t3; g.strokeStyle = COL.grid; g.lineWidth = 1;
+  for (let k = 0; k <= 4; k++) {
+    const val = m.y_min + (m.y_max - m.y_min) * k / 4, y = Math.round(Y(val)) + .5;
+    g.beginPath(); g.moveTo(L, y); g.lineTo(L + pw, y); g.stroke();
+    if (axes) { g.textAlign = "right"; g.textBaseline = "middle"; g.fillText(val.toFixed(m.y_max - m.y_min <= 2 ? 2 : 0), L - 6, y); }
+  }
+  if (axes) {
+    g.textBaseline = "top";
+    const n = W < 420 ? 3 : 5;                       // menos rótulos en pantallas angostas
+    for (let k = 0; k <= n; k++) {
+      const x = t0 + (t1 - t0) * k / n;
+      g.textAlign = k === 0 ? "left" : k === n ? "right" : "center";
+      g.fillText(clock(x), X(x), T + ph + 8);
+    }
+  }
+  g.strokeStyle = stale ? COL.stale : COL.text; g.lineWidth = 1.6; g.lineJoin = "round"; g.beginPath();
+  let first = true;
+  for (let i = 0; i < t.length; i++) {
+    if (t[i] < t0) continue;
+    const x = X(t[i]), y = Y(v[i]);
+    if (first) { g.moveTo(x, y); first = false; } else g.lineTo(x, y);
+  }
+  g.stroke();
+}
+
+// ── en vivo ─────────────────────────────────
+const cards = {};
+async function live() {
+  try {
+    const d = await (await fetch("/api/live?trace=30")).json();
+    const [txt, col] = STATES[d.state] || ["—", COL.t3];
+    $("state").textContent = txt; $("dot").style.background = col;
+    for (const m of d.sensors) {
+      let c = cards[m.id];
+      if (!c) {
+        const el = document.createElement("div");
+        el.className = "card";
+        el.innerHTML = `<div class="head"><span class="lbl">${m.name}</span><span class="desc">${m.desc}</span></div>
+          <div class="val"><span>--</span><small>${m.unit}</small></div><canvas style="height:64px"></canvas>`;
+        $("cards").append(el);
+        c = cards[m.id] = {val: el.querySelector(".val span"), cv: el.querySelector("canvas")};
+      }
+      const x = d.values[m.id] || {}, stale = x.age == null || x.age > 3;
+      c.val.textContent = x.v == null ? (x.no_data ? "N/D" : "--") : fmt(m, x.v);
+      c.val.style.color = x.v == null || stale ? COL.stale : zone(m, x.v);
+      const tr = d.trace[m.id] || {t: [], v: []};
+      plot(c.cv, tr.t, tr.v, m, d.t - 30, d.t, false, stale);
+    }
+    $("info").textContent = `Sesión ${d.session ?? "—"} · ${d.hz.toFixed(1)} lecturas/s · ${new Date().toLocaleTimeString()}`;
+  } catch (e) {
+    $("state").textContent = "SIN SERVIDOR"; $("dot").style.background = COL.crit;
+  }
+}
+
+// ── sesiones guardadas ──────────────────────
+async function sessions() {
+  const rows = await (await fetch("/api/sessions")).json();
+  const when = iso => { const [d, h] = iso.split("T"); const [, mo, day] = d.split("-"); return `${day}/${mo} ${h.slice(0, 5)}`; };
+  $("list").innerHTML = rows.length ? `<div class="scroll"><table><tr><th>#</th><th>INICIO</th><th>DURACIÓN</th><th class="wide">LECTURAS</th><th></th></tr>${
+    rows.map(r => `<tr class="s" data-id="${r.id}"><td class="mono">${r.id}</td><td class="nowrap">${when(r.started)}</td>
+      <td class="mono">${clock(r.duration)}</td><td class="mono wide">${r.samples}</td><td>${r.sim ? '<span class="tag">SIM</span>' : ""}</td></tr>`).join("")
+  }</table></div>` : `<p class="muted">Todavía no hay sesiones guardadas.</p>`;
+  $("list").querySelectorAll("tr.s").forEach(tr => tr.onclick = () => detail(tr.dataset.id));
+}
+
+async function detail(id) {
+  const d = await (await fetch(`/api/session/${id}`)).json();
+  const dur = d.duration || 1;
+  $("list").hidden = true;
+  $("detail").innerHTML = `<div class="bar"><button class="btn" id="back">← Sesiones</button><b>Sesión ${d.id}</b>
+      <span class="muted">${d.started.replace("T", " ")} · ${clock(dur)}${d.sim ? " · SIMULADOR" : ""}</span>
+      <a class="btn right" href="/api/session/${d.id}.csv">Descargar CSV</a></div>` +
+    d.sensors.map(m => `<div class="card" style="margin-bottom:12px"><div class="head"><span class="lbl">${m.name}</span>
+      <span class="desc">${m.unit} · mín ${fmt(m, m.min)} · máx ${fmt(m, m.max)} · prom ${fmt(m, m.avg)}</span></div>
+      <canvas data-id="${m.id}" style="height:190px;margin-top:10px"></canvas></div>`).join("");
+  $("back").onclick = () => { $("detail").innerHTML = ""; $("list").hidden = false; };
+  for (const m of d.sensors) {
+    const cv = $("detail").querySelector(`canvas[data-id="${m.id}"]`), s = d.data[m.id];
+    plot(cv, s.t, s.v, m, 0, dur, true, false);
+  }
+}
+
+let timer = null;
+function tab(which) {
+  $("tab-live").classList.toggle("on", which === "live");
+  $("tab-hist").classList.toggle("on", which === "hist");
+  $("live").hidden = which !== "live";
+  $("hist").hidden = which !== "hist";
+  clearInterval(timer);
+  if (which === "live") { live(); timer = setInterval(live, 1000); }
+  else { $("detail").innerHTML = ""; $("list").hidden = false; sessions(); }
+}
+$("tab-live").onclick = () => tab("live");
+$("tab-hist").onclick = () => tab("hist");
+tab("live");
+</script>
+</body>
+</html>

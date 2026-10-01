@@ -54,6 +54,12 @@ GPIO_PREV = os.environ.get("BTN_PREV_GPIO")
 DB_PATH  = os.environ.get("OBD2_DB", os.path.join(os.path.expanduser("~"), "obd2_logs", "telemetria.db"))
 WEB_PORT = int(os.environ.get("OBD2_WEB_PORT", "8080"))   # 0 = sin visor web
 
+# Dirección: encoder magnético AS5600 por I²C (no pasa por el ELM327)
+STEER_HZ  = 25                                        # lecturas por segundo
+I2C_BUS   = int(os.environ.get("OBD2_I2C_BUS", "1"))   # /dev/i2c-1 en la Raspberry Pi
+STEER_CAL = os.environ.get("OBD2_STEER_CAL",
+                           os.path.join(os.path.dirname(DB_PATH) or ".", "direccion.json"))
+
 # =====================================================
 # COLORES — negro puro y grises; el color solo marca estados (advertencia / crítico)
 # =====================================================
@@ -150,29 +156,33 @@ SENSORS = [
     {"id": "tps", "pid": "0111", "name": "TPS", "desc": "Posición del acelerador", "unit": "%",
      "y_min": 0, "y_max": 100, "dec": 0, "parser": _p_tps, "enabled": True, "period": 0.25},
     {"id": "temp", "pid": "0105", "name": "TEMP", "desc": "Refrigerante", "unit": "°C",
-     "y_min": 40, "y_max": 130, "dec": 0, "parser": _p_temp, "enabled": True, "period": 2.0,
+     "y_min": 40, "y_max": 120, "dec": 0, "parser": _p_temp, "enabled": True, "period": 2.0,
      "warn": 105, "crit": 115},
     {"id": "o2", "pid": "0114", "name": "O2", "desc": "Sonda lambda B1S1", "unit": "V",
      "y_min": 0.0, "y_max": 1.0, "dec": 2, "parser": _p_o2, "enabled": True, "period": 0},
     {"id": "map_l", "pid": "010B", "name": "MAP IZQ", "desc": "Presión de admisión", "unit": "kPa",
-     "y_min": 15, "y_max": 110, "dec": 0, "parser": _p_map_l, "enabled": True, "period": 0.25},
+     "y_min": 20, "y_max": 120, "dec": 0, "parser": _p_map_l, "enabled": True, "period": 0.25},
     {"id": "bat", "pid": "ATRV", "name": "BATERÍA", "desc": "Voltaje (lo mide el ELM327)", "unit": "V",
-     "y_min": 10, "y_max": 15, "dec": 1, "parser": _p_bat, "enabled": True, "period": 5.0,
+     "y_min": 11, "y_max": 15, "dec": 1, "parser": _p_bat, "enabled": True, "period": 5.0,
      "warn_lo": 12.2, "crit_lo": 11.5},
     # Apagado por defecto: un ELM327 estándar casi nunca responde este PID (OBD2_MAP_R=1 lo prende).
     {"id": "map_r", "pid": "2201F0", "name": "MAP DER", "desc": "Presión de admisión", "unit": "kPa",
-     "y_min": 15, "y_max": 110, "dec": 0, "parser": _p_map_r, "period": 0.5,
+     "y_min": 20, "y_max": 120, "dec": 0, "parser": _p_map_r, "period": 0.5,
      "enabled": os.environ.get("OBD2_MAP_R", "0") == "1"},
+    # No viene del ELM327: encoder AS5600 en el eje de la dirección (OBD2_STEER=0 lo apaga).
+    {"id": "steer", "source": "i2c", "name": "DIRECCIÓN", "desc": "Manubrio · − izq / + der", "unit": "°",
+     "y_min": -40, "y_max": 40, "dec": 1, "enabled": os.environ.get("OBD2_STEER", "1") == "1"},
 ]
 SENSOR = {s["id"]: s for s in SENSORS}
 
 # Vistas: el botón las recorre en orden. window = segundos visibles.
 VIEWS = [
     {"name": "RESUMEN", "short": "RESUMEN", "kind": "tiles", "window": 30,
-     "sensors": ["rpm", "tps", "o2", "map_l", "temp", "bat", "map_r"]},
+     "sensors": ["rpm", "tps", "o2", "map_l", "temp", "bat", "steer", "map_r"]},
     {"name": "O2", "short": "O2", "kind": "graphs", "window": 20, "sensors": ["o2"]},
     {"name": "MOTOR", "short": "MOTOR", "kind": "graphs", "window": 60,
      "sensors": ["rpm", "tps", "map_l", "map_r"]},
+    {"name": "DIRECCIÓN", "short": "DIR", "kind": "graphs", "window": 20, "sensors": ["steer"]},
     {"name": "TEMP · BATERÍA", "short": "TEMP·BAT", "kind": "graphs", "window": 300,
      "sensors": ["temp", "bat"]},
 ]
@@ -182,7 +192,19 @@ REFS = {
     "o2":    [(0.45, "λ = 1  (0.45 V)", "#3A3A3A", "#7A7A7A")],
     "map_l": [(101, "101 kPa (atm)", "#3A3A3A", "#7A7A7A")],
     "map_r": [(101, "101 kPa (atm)", "#3A3A3A", "#7A7A7A")],
+    "temp":  [(100, "ventilador (100 °C)", "#3A3A3A", "#7A7A7A")],
+    "steer": [(0, "centro", "#3A3A3A", "#7A7A7A")],
 }
+
+
+def _obd(s):
+    return s.get("source", "obd") == "obd"
+
+
+def _axis_label(v, step):
+    """Rótulo del eje con los decimales justos para que el paso de la rejilla sea exacto."""
+    d = next((d for d in range(4) if abs(step * 10 ** d - round(step * 10 ** d)) < 1e-6), 3)
+    return f"{v:.{d}f}"
 
 
 def _fmt(s, v):
@@ -237,6 +259,7 @@ db_queue = queue.SimpleQueue()     # (t, sensor, valor) pendientes de guardar
 stop_event = threading.Event()
 worker = None
 writer = None
+steerer = None
 
 
 def reset_data():
@@ -347,7 +370,7 @@ def read_thread(stop, t0):
     last_read = {}
     try:
         while not stop.is_set():
-            enabled = [s for s in SENSORS if s["enabled"]]
+            enabled = [s for s in SENSORS if s["enabled"] and _obd(s)]
             if MODO_SIMULADOR:
                 link.update(state="sim", since=time.time())
                 t = time.time() - t0
@@ -454,7 +477,7 @@ def writer_thread(stop, sid):
 
 
 def start_reading():
-    global worker, writer, session_t0, session_id
+    global worker, writer, steerer, session_t0, session_id
     reset_data()
     stop_event.clear()
     session_id = open_session()
@@ -466,13 +489,116 @@ def start_reading():
         writer = threading.Thread(target=writer_thread, args=(stop_event, session_id),
                                   daemon=True, name="db-writer")
         writer.start()
+    if SENSOR["steer"]["enabled"]:
+        _load_steer_cal()
+        steerer = threading.Thread(target=steer_thread, args=(stop_event, session_t0),
+                                   daemon=True, name="steer")
+        steerer.start()
 
 
 def stop_reading():
     stop_event.set()
-    for th in (worker, writer):
+    for th in (worker, writer, steerer):
         if th is not None:
             th.join(3)
+
+
+# =====================================================
+# DIRECCIÓN — encoder magnético AS5600 (I²C 0x36): imán en el eje, sensor fijo al cuadro
+# =====================================================
+AS5600_ADDR = 0x36
+I2C_SLAVE = 0x0703                  # ioctl de Linux para elegir el dispositivo del bus
+steer_cal = {"center": None, "invert": False}     # centro en grados crudos del sensor
+steer_state = {"status": "init", "raw": None}     # ok | sin_sensor | sin_iman | sim
+
+
+def _load_steer_cal():
+    try:
+        with open(STEER_CAL) as f:
+            data = json.load(f)
+        steer_cal.update(center=data.get("center"), invert=bool(data.get("invert", False)))
+    except (OSError, ValueError):
+        pass
+
+
+def _save_steer_cal():
+    try:
+        os.makedirs(os.path.dirname(STEER_CAL) or ".", exist_ok=True)
+        tmp = STEER_CAL + ".tmp"
+        with open(tmp, "w") as f:
+            json.dump(steer_cal, f)
+        os.replace(tmp, STEER_CAL)                # escritura atómica: nunca queda a medias
+    except OSError as e:
+        print(f"⚠ No se pudo guardar la calibración de la dirección: {e}")
+
+
+def steer_set_center():
+    """El ángulo actual pasa a ser 0° (manubrio derecho)."""
+    if steer_state["raw"] is None:
+        return False
+    steer_cal["center"] = steer_state["raw"]
+    _save_steer_cal()
+    return True
+
+
+def steer_toggle_invert():
+    steer_cal["invert"] = not steer_cal["invert"]
+    _save_steer_cal()
+    return True
+
+
+def _steer_angle(raw):
+    center = steer_cal["center"]
+    if center is None:
+        center = 200.0 if MODO_SIMULADOR else 0.0
+    a = (raw - center + 180) % 360 - 180          # de −180 a 180, sin brinco al pasar por 0°/360°
+    return round(-a if steer_cal["invert"] else a, 1)
+
+
+def _as5600_read(fd):
+    """(ángulo crudo en grados, ¿hay imán?). Dos lecturas: STATUS (0x0B) y RAW ANGLE (0x0C-0x0D)."""
+    os.write(fd, b"\x0b")
+    status = os.read(fd, 1)[0]
+    os.write(fd, b"\x0c")
+    hi, lo = os.read(fd, 2)
+    return ((hi & 0x0F) << 8 | lo) * 360 / 4096, bool(status & 0x20)
+
+
+def steer_thread(stop, t0):
+    """Lee la dirección 25 veces por segundo, en su propio hilo para no esperar al ELM327."""
+    fd = None
+    try:
+        while not stop.is_set():
+            t = time.time() - t0
+            if MODO_SIMULADOR:
+                raw = (200 + 9 * math.sin(t * 0.5) + 2.5 * math.sin(t * 2.3)) % 360
+                steer_state.update(status="sim", raw=raw)
+                _record("steer", t, _steer_angle(raw))
+                stop.wait(1 / STEER_HZ)
+                continue
+            try:
+                if fd is None:
+                    import fcntl
+                    fd = os.open(f"/dev/i2c-{I2C_BUS}", os.O_RDWR)
+                    fcntl.ioctl(fd, I2C_SLAVE, AS5600_ADDR)
+                raw, magnet = _as5600_read(fd)
+                if magnet:
+                    steer_state.update(status="ok", raw=raw)
+                    _record("steer", t, _steer_angle(raw))
+                else:
+                    steer_state.update(status="sin_iman")
+                    _record("steer", t, None)
+                stop.wait(1 / STEER_HZ)
+            except (OSError, ImportError):            # sin bus I²C o sin AS5600: reintenta
+                steer_state.update(status="sin_sensor")
+                _record("steer", t, None)
+                if fd is not None:
+                    os.close(fd)
+                    fd = None
+                stop.wait(RETRY_S)
+    finally:
+        if fd is not None:
+            os.close(fd)
 
 
 # =====================================================
@@ -484,6 +610,8 @@ WEB_PAGE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "
 def _meta(s):
     m = {k: s[k] for k in ("id", "name", "desc", "unit", "dec", "y_min", "y_max")}
     m.update({k: s[k] for k in ("warn", "crit", "warn_lo", "crit_lo") if k in s})
+    if s["id"] == "steer":
+        m["calibrable"] = True
     return m
 
 
@@ -501,7 +629,9 @@ def _live(trace_s):
             pts = [(t, v) for t, v in zip(sd["t"], sd["v"]) if t >= now - trace_s]
             trace[s["id"]] = {"t": [round(t, 3) for t, _ in pts], "v": [v for _, v in pts]}
     return {"state": link["state"], "session": session_id, "hz": hz, "t": now,
-            "sensors": [_meta(s) for s in SENSORS if s["enabled"]], "values": values, "trace": trace}
+            "sensors": [_meta(s) for s in SENSORS if s["enabled"]], "values": values, "trace": trace,
+            "steer": {"status": steer_state["status"], "calibrated": steer_cal["center"] is not None,
+                      "invert": steer_cal["invert"]}}
 
 
 def _decimate(rows, n=2000):
@@ -593,6 +723,15 @@ class _Web(BaseHTTPRequestHandler):
             self._reply(404, "no encontrado", "text/plain")
         except Exception as e:
             self._reply(500, str(e), "text/plain; charset=utf-8")
+
+    def do_POST(self):
+        """Calibración de la dirección desde el celular: /api/steer/center y /api/steer/invert."""
+        actions = {"/api/steer/center": steer_set_center, "/api/steer/invert": steer_toggle_invert}
+        action = actions.get(urlparse(self.path).path)
+        if action is None:
+            return self._reply(404, "no encontrado", "text/plain")
+        ok = action()
+        self._json({"ok": ok, "calibrated": steer_cal["center"] is not None, "invert": steer_cal["invert"]})
 
 
 def start_web():
@@ -695,6 +834,8 @@ class Dash:
             self.step(1)
         elif e.keysym in PREV_KEYS:
             self.step(-1)
+        elif e.keysym in ("c", "C"):                 # teclado de taller: fija el centro de la dirección
+            steer_set_center()
 
     def step(self, d):
         self.vi = (self.vi + d) % len(self.views)
@@ -810,7 +951,7 @@ class Dash:
     def _build_tiles(self, v, sensors, area):
         x0, y0, x1, y1 = area
         n = len(sensors)
-        cols = 1 if n == 1 else 2 if n <= 4 else 3
+        cols = 1 if n == 1 else 2 if n <= 4 else 3 if n <= 6 else 4
         rows = (n + cols - 1) // cols
         gap = self.S(14)
         th = (y1 - y0 - (rows - 1) * gap) / rows
@@ -911,18 +1052,23 @@ class Dash:
             gy = _ymap(s, py0, py1, gv)
             c.create_line(px0, gy, px1, gy, fill=GRID)
             c.create_text(px0 - S(8), gy, anchor="e", fill=TEXT3, font=self.f("mono", S(11)),
-                          text=f"{gv:.2f}" if rng <= 2 else f"{gv:.0f}")
+                          text=_axis_label(gv, rng / 4))
+        labels = []
         for rv, text, line_c, text_c in REFS.get(s["id"], []):
             if s["y_min"] < rv < s["y_max"]:
                 ry = _ymap(s, py0, py1, rv)
                 c.create_line(px0, ry, px1, ry, fill=line_c, dash=(5, 5))
                 ly = ry - S(9) if ry - S(9) > py0 + S(26) else ry + S(10)
-                c.create_text(px1 - S(10), ly, anchor="e", text=text, fill=text_c, font=self.f("sans", S(11)))
+                labels.append((ly, text, text_c))
 
         # items que se mueven: línea, punto y mensaje
         line = c.create_line(0, 0, 0, 0, fill=TEXT, width=max(2, S(2)), state="hidden")
         r = S(5)
         dot = c.create_oval(0, 0, 0, 0, fill=TEXT, outline=PLOT, width=S(2), state="hidden")
+        for ly, text, text_c in labels:                # encima de la traza, con fondo negro para que se lea
+            t_id = c.create_text(px1 - S(10), ly, anchor="e", text=text, fill=text_c, font=self.f("sans", S(11)))
+            x0, y0b, x1, y1b = c.bbox(t_id)
+            c.tag_lower(c.create_rectangle(x0 - S(4), y0b, x1 + S(2), y1b, fill=PLOT, outline=""), t_id)
         msg = c.create_text((px0 + px1) / 2, (py0 + py1) / 2, text="", fill=STALE, font=self.f("sans", S(15), True))
         self.dyn.append((self._upd_graph, {"s": s, "val": val, "line": line, "dot": dot,
                                            "msg": msg, "stats": stats, "r": r, "window": window,
@@ -942,7 +1088,7 @@ class Dash:
         if st == "sim":
             return "SIMULADOR", WARN
         if st == "live":
-            ids = [s["id"] for s in SENSORS if s["enabled"]]
+            ids = [s["id"] for s in SENSORS if s["enabled"] and _obd(s)]
             if time.time() - link["since"] > 5 and all(snap[i]["last"] is None for i in ids):
                 return "SIN DATOS ECU", WARN
             return "OBD2 EN VIVO", OK
@@ -1013,7 +1159,12 @@ class Dash:
         self._set(d["line"], state=state, fill=lc)
         self._set(d["dot"], state=state, fill=lc)
 
-        if sd["last"] is None:
+        if s["id"] == "steer" and steer_state["status"] in ("sin_sensor", "sin_iman"):
+            msg, mc = ({"sin_sensor": "SIN SENSOR — conecta el AS5600 al I²C",
+                        "sin_iman": "SIN IMÁN — el AS5600 no lo detecta (0.5–3 mm)"}[steer_state["status"]], WARN)
+        elif s["id"] == "steer" and steer_cal["center"] is None and not MODO_SIMULADOR and sd["v"]:
+            msg, mc = "SIN CALIBRAR — fija el centro desde el celular", WARN
+        elif sd["last"] is None:
             msg, mc = ("SIN DATOS — el ECU no responde este PID" if sd["no_data"] else "ESPERANDO DATOS"), STALE
         elif stale:
             msg, mc = f"SIN SEÑAL · hace {now - sd['t'][-1]:.0f} s", WARN

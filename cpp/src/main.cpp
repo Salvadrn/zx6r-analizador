@@ -5,6 +5,7 @@
 // botón (cualquier botón que mande teclas). Con OBD2_SIM=1 corre con datos simulados.
 #include "config.hpp"
 #include "obd.hpp"
+#include "steer.hpp"
 #include "store.hpp"
 #include "ui.hpp"
 #include "web.hpp"
@@ -67,9 +68,16 @@ Config load_config() {
     c.font_sans = expand_home(env("OBD2_FONT_SANS_FILE"));
     c.font_mono = expand_home(env("OBD2_FONT_MONO_FILE"));
     c.snapshot_dir = expand_home(env("OBD2_SNAPSHOT_DIR"));
+    c.i2c_bus = env_int("OBD2_I2C_BUS", 1);
+    const std::size_t slash = c.db_path.rfind('/');
+    const std::string db_dir = slash == std::string::npos ? "." : slash == 0 ? "/" : c.db_path.substr(0, slash);
+    c.steer_cal = expand_home(env("OBD2_STEER_CAL", db_dir + "/direccion.json"));
     const bool map_r = env_flag("OBD2_MAP_R");
-    for (std::size_t i = 0; i < SENSOR_COUNT; ++i)
-        c.active[i] = SENSORS[i].on_by_default || (map_r && std::strcmp(SENSORS[i].id, "map_r") == 0);
+    const bool steer = env("OBD2_STEER", "1") == "1";
+    for (std::size_t i = 0; i < SENSOR_COUNT; ++i) {
+        const std::string id = SENSORS[i].id;
+        c.active[i] = id == "map_r" ? map_r : id == "steer" ? steer : SENSORS[i].on_by_default;
+    }
     return c;
 }
 
@@ -87,7 +95,9 @@ int main() {
     tel.on_sample([&store](double t, std::size_t i, double v) { store.add(t, SENSORS[i].id, v); });
     Reader reader(cfg, tel);
     reader.start();
-    WebServer web(cfg, tel, store);
+    Steering steer(cfg, tel);
+    steer.start();
+    WebServer web(cfg, tel, store, steer);
     web.start();
 
     std::string web_line = cfg.web_port > 0 ? "no disponible en el puerto " + std::to_string(cfg.web_port) : "apagado";
@@ -104,18 +114,24 @@ int main() {
     std::printf("  OBD2  : %s:%d\n", cfg.obd_ip.c_str(), cfg.obd_port);
     std::printf("  Base  : %s\n", db_line.c_str());
     std::printf("  Web   : %s\n", web_line.c_str());
+    const int si = sensor_index("steer");
+    if (si >= 0 && cfg.active[static_cast<std::size_t>(si)])
+        std::printf("  Dir.  : AS5600 en /dev/i2c-%d · calibración %s\n", cfg.i2c_bus, cfg.steer_cal.c_str());
+    else
+        std::printf("  Dir.  : apagada (OBD2_STEER=0)\n");
     std::printf("  Botón : → / espacio / Enter = siguiente · ← = anterior · Esc = salir\n");
     std::printf("==========================================================\n");
     std::fflush(stdout);
 
     // Sin pantalla (OBD2_HEADLESS=1 o si no abre la ventana): sigue leyendo, guardando y sirviendo
-    if (cfg.headless || !run_ui(cfg, tel, store, web, g_quit)) {
+    if (cfg.headless || !run_ui(cfg, tel, store, web, steer, g_quit)) {
         if (!cfg.headless) std::printf("[UI] No se pudo abrir la pantalla; sigo leyendo (Ctrl+C para salir)\n");
         std::fflush(stdout);
         while (!g_quit) std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
 
     reader.stop();
+    steer.stop();
     web.stop();
     store.close();
     return 0;

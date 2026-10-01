@@ -90,7 +90,7 @@ int main() {
     WebServer web(cfg, tel, store);
     web.start();
 
-    std::string web_line = "apagado";
+    std::string web_line = cfg.web_port > 0 ? "no disponible en el puerto " + std::to_string(cfg.web_port) : "apagado";
     if (web.listening()) {
         const std::string ip = WebServer::local_ip(cfg.obd_ip);
         web_line = "http://" + (ip.empty() ? std::string("<ip>") : ip) + ":" + std::to_string(cfg.web_port);

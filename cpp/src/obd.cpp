@@ -62,9 +62,10 @@ std::optional<long> hex_bytes(const std::optional<std::string>& p, int count) {
     return v;
 }
 
+// Redondeo al par, como round() de Python
 double round_to(double v, int dec) {
     const double f = std::pow(10.0, dec);
-    return std::round(v * f) / f;
+    return std::nearbyint(v * f) / f;
 }
 
 // Igual que re.search(r"(\d{1,2}\.\d)\s*V", resp)
@@ -238,9 +239,9 @@ std::optional<double> parse_response(const Sensor& s, const std::string& resp) {
     const auto p = payload(resp, std::string("41") + (s.cmd + 2));
     switch (s.parse) {
         case Parse::Rpm: {
-            const auto ab = hex_bytes(p, 2);   // (256A + B) / 4
+            const auto ab = hex_bytes(p, 2);   // (256A + B) / 4, en rpm enteras
             if (!ab) return std::nullopt;
-            return *ab / 4.0;
+            return round_to(*ab / 4.0, 0);
         }
         case Parse::Tps: {
             const auto a = hex_bytes(p, 1);
@@ -270,7 +271,7 @@ std::optional<double> parse_response(const Sensor& s, const std::string& resp) {
 double sim_value(const Sensor& s, double t) {
     const double load = 20 + 55 * std::fabs(std::sin(t * 0.4));
     switch (s.parse) {
-        case Parse::Rpm: return std::round(2500 + 5500 * std::fabs(std::sin(t * 0.4)) + 300 * std::sin(t * 3.1));
+        case Parse::Rpm: return round_to(2500 + 5500 * std::fabs(std::sin(t * 0.4)) + 300 * std::sin(t * 3.1), 0);
         case Parse::Tps: return clampd(load + 8 * std::sin(t * 3.1), 0, 100);
         case Parse::Temp: return 78 + 12 * std::sin(t * 0.04);
         case Parse::O2: return clampd(round_to(0.5 + 0.4 * std::sin(t * 6.0) + 0.05 * std::sin(t * 17.3), 3), 0, 1);

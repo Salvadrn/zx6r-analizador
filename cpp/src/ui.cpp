@@ -543,14 +543,11 @@ void Dash::draw_chrome(const Snapshot& snap) {
     const float xh = m_ + S(20) + cv_.width(SANS_BOLD, S(11), hint) + S(18);
     cv_.text(MONO, S(12), std::to_string(vi_ + 1) + " / " + std::to_string(views_.size()), xh, by, Anchor::W, TEXT3);
 
-    const int session = store_.session();
-    const std::string rec = session >= 0 ? "REC · SESIÓN " + std::to_string(session) : "SIN REGISTRO";
-    const std::string web = web_.listening() ? "   WEB " + ip_ + ":" + std::to_string(web_.port()) : "";
-    const float web_w = web.empty() ? 0 : cv_.width(MONO, S(11), web);
-    const float rec_w = cv_.width(MONO, S(11), rec);
-    cv_.text(MONO, S(11), web, W_ - m_, by, Anchor::E, TEXT3);
-    cv_.text(MONO, S(11), rec, W_ - m_ - web_w, by, Anchor::E, session >= 0 ? TEXT3 : WARN);
-    cv_.disc(W_ - m_ - web_w - rec_w - S(14), by, S(4), store_.writing() ? CRIT : WARN);
+    const bool rec_ok = store_.writing() && store_.session() >= 0;   // la base abrió y está guardando
+    std::string rec = rec_ok ? "REC · SESIÓN " + std::to_string(store_.session()) : "SIN REGISTRO";
+    if (web_.listening()) rec += "   WEB " + ip_ + ":" + std::to_string(web_.port());
+    cv_.text(MONO, S(11), rec, W_ - m_, by, Anchor::E, rec_ok ? TEXT3 : WARN);
+    cv_.disc(W_ - m_ - cv_.width(MONO, S(11), rec) - S(14), by, S(4), rec_ok ? CRIT : WARN);
 }
 
 void Dash::draw_tiles(const View& v, const std::vector<std::size_t>& ids, const Snapshot& snap, float x0, float y0,

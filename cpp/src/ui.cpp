@@ -1,6 +1,7 @@
 #include "ui.hpp"
 
 #include "obd.hpp"
+#include "steer.hpp"
 #include "store.hpp"
 #include "web.hpp"
 
@@ -194,9 +195,9 @@ public:
                 std::printf("[UI] Sin fuente TTF para %s: se usa la de raylib\n", names[f]);
         }
         for (int c = 32; c < 127; ++c) full_.push_back(c);
-        // á é í ó ú Á É Í Ó Ú ñ Ñ ° λ · — ← →
+        // á é í ó ú Á É Í Ó Ú ñ Ñ ° λ · — ← → − ² –
         for (int c : {0xE1, 0xE9, 0xED, 0xF3, 0xFA, 0xC1, 0xC9, 0xCD, 0xD3, 0xDA, 0xF1, 0xD1, 0xB0, 0x3BB, 0xB7,
-                      0x2014, 0x2190, 0x2192})
+                      0x2014, 0x2190, 0x2192, 0x2212, 0xB2, 0x2013})
             full_.push_back(c);
         for (char c : std::string(" -./0123456789DN")) numeric_.push_back(c);   // valores grandes: "--", "N/D"
     }
@@ -261,6 +262,8 @@ public:
 
     float snap(float v) const { return std::round(v * dpi) / dpi; }
     float hair() const { return std::max(1.0f, std::round(dpi)) / dpi; }   // línea de 1 px
+
+    float box_height(Face f, float px) { return fonts.get(f, px, false).size; }   // alto de una línea de texto
 
     float width(Face f, float px, const std::string& s, bool numeric = false) {
         const Fonts::Use u = fonts.get(f, px, numeric);
@@ -426,8 +429,8 @@ private:
 // =====================================================
 class Dash {
 public:
-    Dash(const Config& cfg, const Telemetry& tel, const Store& store, const WebServer& web)
-        : cfg_(cfg), tel_(tel), store_(store), web_(web) {
+    Dash(const Config& cfg, const Telemetry& tel, const Store& store, const WebServer& web, Steering& steer)
+        : cfg_(cfg), tel_(tel), store_(store), web_(web), steer_(steer) {
         for (const View& v : VIEWS)
             if (!view_sensors(v).empty()) views_.push_back(&v);
     }
@@ -463,6 +466,7 @@ private:
     const Telemetry& tel_;
     const Store& store_;
     const WebServer& web_;
+    Steering& steer_;
     Canvas cv_;
     std::vector<const View*> views_;
     int vi_ = 0;
@@ -478,7 +482,8 @@ std::pair<const char*, Color> Dash::status(const Snapshot& snap) const {
             return {"SIMULADOR", WARN};
         case LinkState::Live: {
             bool any = false;
-            for (std::size_t i = 0; i < SENSOR_COUNT; ++i) any = any || (cfg_.active[i] && snap.sensors[i].last);
+            for (std::size_t i = 0; i < SENSOR_COUNT; ++i)   // solo los que pasan por el ELM327
+                any = any || (cfg_.active[i] && is_obd(SENSORS[i]) && snap.sensors[i].last);
             if (snap.now - snap.since > 5 && !any) return {"SIN DATOS ECU", WARN};
             return {"OBD2 EN VIVO", OK};
         }
@@ -583,7 +588,7 @@ void Dash::draw_tiles(const View& v, const std::vector<std::size_t>& ids, const 
                       float x1, float y1) {
     const int n = static_cast<int>(ids.size());
     if (n == 0) return;
-    const int cols = n == 1 ? 1 : n <= 4 ? 2 : 3;
+    const int cols = n == 1 ? 1 : n <= 4 ? 2 : n <= 6 ? 3 : 4;
     const int rows = (n + cols - 1) / cols;
     const float gap = S(14);
     const float th = (y1 - y0 - (rows - 1) * gap) / rows;
@@ -607,7 +612,7 @@ void Dash::draw_tile(const Sensor& s, const SensorView& sv, double now, float x,
         cv_.text(SANS, S(12), s.desc, x + w - S(22), y + S(30), Anchor::E, TEXT3);
 
     const int vchars = value_chars(s);
-    const float vpx = std::floor(std::min(h * 0.36f, w * 0.5f / (vchars * 0.62f)));
+    const float vpx = std::floor(std::min(h * 0.36f, w * 0.58f / (vchars * 0.62f)));
     const float xr = x + pad + cv_.width(MONO_BOLD, vpx, "0", true) * vchars;
     const float vy = y + h * 0.46f;
     const Shown val = shown_value(s, sv, now);
@@ -713,19 +718,17 @@ void Dash::draw_panel(const Sensor& s, const SensorView& sv, double now, float x
         const double gv = s.y_min + rng * k / 4;
         const float gy = ymap(s, py0, py1, gv);
         cv_.hline(px0, px1, gy, GRID);
-        char buf[32];
-        std::snprintf(buf, sizeof buf, rng <= 2 ? "%.2f" : "%.0f", gv);
-        cv_.text(MONO, S(11), buf, px0 - S(8), gy, Anchor::E, TEXT3);
+        cv_.text(MONO, S(11), axis_label(gv, rng / 4), px0 - S(8), gy, Anchor::E, TEXT3);
     }
+    std::vector<std::pair<float, const char*>> ref_labels;
     for (const RefLine& ref : REFS) {
         if (std::strcmp(ref.sensor, s.id) != 0 || !(s.y_min < ref.value && ref.value < s.y_max)) continue;
         const float ry = ymap(s, py0, py1, ref.value);
         cv_.dashed_hline(px0, px1, ry, S(5), S(5), REF_LINE);
-        const float ly = ry - S(9) > py0 + S(26) ? ry - S(9) : ry + S(10);
-        cv_.text(SANS, S(11), ref.label, px1 - S(10), ly, Anchor::E, REF_TEXT);
+        ref_labels.push_back({ry - S(9) > py0 + S(26) ? ry - S(9) : ry + S(10), ref.label});
     }
 
-    // traza, punto final y mensaje
+    // traza, punto final, rótulos de referencia y mensaje
     const Color lc = val.stale ? STALE : TEXT;
     if (pts_.size() >= 2) {
         cv_.polyline(pts_, std::max(2.0f, S(2)), lc);
@@ -733,9 +736,25 @@ void Dash::draw_panel(const Sensor& s, const SensorView& sv, double now, float x
         cv_.disc(p.x, p.y, S(5) + S(1), BG);   // aro negro que separa el punto de la línea
         cv_.disc(p.x, p.y, S(5), lc);
     }
+    for (const auto& lab : ref_labels) {   // encima de la traza, con fondo negro para que se lea
+        const float lx = px1 - S(10), lw = cv_.width(SANS, S(11), lab.second), lh = cv_.box_height(SANS, S(11));
+        cv_.rect(lx - lw - S(4), lab.first - lh / 2, lx + S(2), lab.first + lh / 2, BG);
+        cv_.text(SANS, S(11), lab.second, lx, lab.first, Anchor::E, REF_TEXT);
+    }
     std::string msg;
     Color mc = STALE;
-    if (!sv.last) {
+    const bool is_steer = std::strcmp(s.id, "steer") == 0;
+    const SteerStatus steer = is_steer ? steer_.status() : SteerStatus{"", true, false};
+    if (is_steer && std::strcmp(steer.status, "sin_sensor") == 0) {
+        msg = "SIN SENSOR — conecta el AS5600 al I²C";
+        mc = WARN;
+    } else if (is_steer && std::strcmp(steer.status, "sin_iman") == 0) {
+        msg = "SIN IMÁN — el AS5600 no lo detecta (0.5–3 mm)";
+        mc = WARN;
+    } else if (is_steer && !steer.calibrated && !cfg_.sim && sv.last) {
+        msg = "SIN CALIBRAR — fija el centro desde el celular";
+        mc = WARN;
+    } else if (!sv.last) {
         msg = sv.no_data ? "SIN DATOS — el ECU no responde este PID" : "ESPERANDO DATOS";
     } else if (val.stale) {
         char buf[64];
@@ -803,6 +822,7 @@ bool Dash::run(const std::atomic<bool>& quit) {
             if (key_pressed({KEY_RIGHT, KEY_SPACE, KEY_ENTER, KEY_KP_ENTER, KEY_PAGE_DOWN, KEY_DOWN, KEY_N}))
                 vi_ = (vi_ + 1) % nviews;
             if (key_pressed({KEY_LEFT, KEY_BACKSPACE, KEY_PAGE_UP, KEY_UP, KEY_P})) vi_ = (vi_ + nviews - 1) % nviews;
+            if (IsKeyPressed(KEY_C)) steer_.set_center();   // teclado de taller: fija el centro de la dirección
         }
 
         W_ = static_cast<float>(GetScreenWidth());
@@ -856,8 +876,8 @@ bool Dash::run(const std::atomic<bool>& quit) {
 
 }  // namespace
 
-bool run_ui(const Config& cfg, const Telemetry& tel, const Store& store, const WebServer& web,
+bool run_ui(const Config& cfg, const Telemetry& tel, const Store& store, const WebServer& web, Steering& steer,
             const std::atomic<bool>& quit) {
-    Dash dash(cfg, tel, store, web);
+    Dash dash(cfg, tel, store, web, steer);
     return dash.run(quit);
 }

@@ -4,3 +4,7 @@ __pycache__/
 .DS_Store
 obd2_logs/
 *.csv
+*.db
+*.db-wal
+*.db-shm
+cpp/build/

@@ -82,12 +82,18 @@ html,body{margin:0}
 .hoja .hdr div b{display:block; font-weight:500; font-size:12.5px}
 .hoja .hdr .h-sig{border-color:#8a6d00; background:color-mix(in srgb,#8a6d00 16%,transparent); color:var(--sig-t)}
 .hoja .hdr .h-gnd{border-color:var(--gnd); background:color-mix(in srgb,#9e9e9e 24%,transparent); color:var(--text-primary,var(--tp))}
-.hoja .hdr .h-pwr{border-style:dashed; border-color:#1f5e8b; color:var(--pwr-t)}
+.hoja .hdr .h-pwr3{border-color:#1f5e8b; background:color-mix(in srgb,#1f5e8b 16%,transparent); color:var(--pwr-t)}
+.hoja .hdr .h-dat{border-color:#6b3fa0; background:color-mix(in srgb,#6b3fa0 16%,transparent); color:var(--dat-t)}
 .hoja .hdr .h-bad{border-color:#b3261e; color:var(--bad-t); background:repeating-linear-gradient(135deg,transparent 0 5px,color-mix(in srgb,#b3261e 14%,transparent) 5px 8px)}
 .hoja .hdrlab{display:flex; justify-content:space-between; max-width:400px; font-size:12px; color:var(--text-secondary,var(--ts))}
 /* esquemáticos */
 .hoja .esq{overflow-x:auto; -webkit-overflow-scrolling:touch}
-.hoja .esq svg{display:block; width:100%; min-width:340px; height:auto; color:var(--text-primary,var(--tp))}
+/* 400 px mínimo: así el texto del esquemático nunca baja de 12 px; en el celular se desliza de lado */
+.hoja .esq svg{display:block; width:100%; min-width:400px; height:auto; color:var(--text-primary,var(--tp))}
+@media (max-width:480px){
+  .hoja{padding:14px 12px 48px}
+  .hoja .cables{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
 .hoja svg text{font-family:inherit; fill:currentColor}
 .hoja svg .s{fill:var(--text-secondary,var(--ts))}
 .hoja svg .tp{fill:var(--pwr-t)} .hoja svg .tg{fill:var(--sig-t)} .hoja svg .td{fill:var(--dat-t)}
@@ -112,7 +118,10 @@ html,body{margin:0}
 .hoja .co-bad{border-color:#b3261e} .hoja .co-bad .co-t{color:var(--bad-t)}
 /* tablas */
 .hoja .tabla{overflow-x:auto; -webkit-overflow-scrolling:touch; margin:0 0 12px}
-.hoja table{border-collapse:collapse; width:100%; font-size:13.5px; min-width:560px}
+/* sin DOCTYPE el navegador va en modo quirks y las tablas no heredan color ni letra: se fijan aquí */
+.hoja table{border-collapse:collapse; width:100%; min-width:560px; color:var(--text-primary,var(--tp));
+  font-family:inherit; font-size:13.5px; font-weight:400; line-height:1.5}
+.hoja td,.hoja th{color:inherit}
 .hoja th{text-align:left; font-weight:500; font-size:12px; letter-spacing:.05em; text-transform:uppercase;
   color:var(--text-secondary,var(--ts)); padding:0 10px 8px 0; border-bottom:1px solid var(--border,var(--bd)); vertical-align:bottom}
 .hoja td{padding:9px 10px 9px 0; border-bottom:1px solid var(--border,var(--bd)); vertical-align:top}
@@ -126,9 +135,10 @@ html,body{margin:0}
 <div class="hoja">
 
 <h1>¿Cómo se conecta el tablero a la ZX-6R?</h1>
-<p class="bajada">Moto → conector de diagnóstico → ELM327 ⇢ WiFi ⇢ Raspberry Pi → pantalla, más botones y celular.
-Resuelve cuatro dudas: si el ELM327 se conecta directo a la moto, cómo alimentar la Pi sin matar la batería ni la microSD,
-si los botones llevan resistencia, y si el celular y la Pi caben juntos en el WiFi del ELM. Al final: qué comprar y en qué orden.</p>
+<p class="bajada">Moto → conector de diagnóstico → ELM327 ⇢ WiFi ⇢ Raspberry Pi → pantalla, más botones, sensor de dirección y celular.
+Resuelve: si el ELM327 se conecta directo a la moto, cómo alimentar la Pi sin matar la batería ni la microSD,
+si los botones llevan resistencia, si el celular y la Pi caben juntos en el WiFi del ELM, y cómo montar el sensor de dirección sin tocar la dirección.
+Al final: qué comprar y en qué orden.</p>
 
 <div class="banda b-ok">
   <h3>Medido contra no medido</h3>
@@ -152,7 +162,7 @@ si los botones llevan resistencia, y si el celular y la Pi caben juntos en el Wi
 <div class="cols">
   <div>
     <div class="esq">
-      <svg viewBox="0 0 400 540" role="img" aria-label="Diagrama de bloques: ECU, conector KDS, adaptador, ELM327, WiFi, Raspberry Pi, pantalla, botones, celular y la alimentación desde la batería">
+      <svg viewBox="0 0 400 566" role="img" aria-label="Diagrama de bloques: ECU, conector KDS, adaptador y ELM327 bajo el asiento; WiFi a la Raspberry Pi al frente; celular; alimentación desde la batería; pantalla, sensor de dirección AS5600 y botones conectados a la Pi">
         <!-- columna de datos -->
         <rect class="box" x="15" y="14" width="170" height="44" rx="6"/>
         <text x="100" y="33" text-anchor="middle" font-size="13.5" font-weight="500">ECU</text>
@@ -181,16 +191,15 @@ si los botones llevan resistencia, y si el celular y la Pi caben juntos en el Wi
         <circle cx="100" cy="305" r="2.6" fill="#6b3fa0"/>
         <line x1="100" y1="268" x2="100" y2="284" stroke="#6b3fa0" stroke-width="1.6" stroke-dasharray="4 4"/>
         <!-- WiFi a la Pi -->
-        <line x1="120" y1="300" x2="208" y2="338" stroke="#6b3fa0" stroke-width="2" stroke-dasharray="6 5"/>
-        <text x="132" y="338" font-size="12" class="td">WiFi</text>
+        <polyline points="124,298 196,298 196,410" fill="none" stroke="#6b3fa0" stroke-width="2" stroke-dasharray="6 5"/>
+        <text x="136" y="290" font-size="12" class="td">WiFi</text>
         <!-- celular -->
-        <line x1="100" y1="312" x2="100" y2="460" stroke="#6b3fa0" stroke-width="2" stroke-dasharray="6 5"/>
-        <text x="108" y="392" font-size="12" class="td">se une a la</text>
-        <text x="108" y="407" font-size="12" class="td">red del ELM</text>
-        <rect class="box" x="15" y="460" width="170" height="46" rx="6"/>
-        <text x="100" y="479" text-anchor="middle" font-size="13.5" font-weight="500">Celular (navegador)</text>
-        <text x="100" y="497" text-anchor="middle" font-size="12" class="s">http://IP-de-la-Pi:8080</text>
-        <polyline points="185,483 196,483 196,362 208,362" fill="none" stroke="#6b3fa0" stroke-width="2" stroke-dasharray="6 5"/>
+        <line x1="100" y1="310" x2="100" y2="330" stroke="#6b3fa0" stroke-width="2" stroke-dasharray="4 4"/>
+        <rect class="box" x="15" y="330" width="170" height="46" rx="6"/>
+        <text x="100" y="349" text-anchor="middle" font-size="13.5" font-weight="500">Celular (navegador)</text>
+        <text x="100" y="367" text-anchor="middle" font-size="12" class="s">se une a la red del ELM</text>
+        <line x1="100" y1="376" x2="100" y2="410" stroke="#6b3fa0" stroke-width="2" stroke-dasharray="6 5"/>
+        <text x="108" y="398" font-size="12" class="td">http://IP:8080</text>
         <!-- columna de potencia -->
         <rect class="box" x="208" y="14" width="180" height="44" rx="6"/>
         <text x="298" y="33" text-anchor="middle" font-size="13.5" font-weight="500">Batería 12 V 8 Ah</text>
@@ -198,7 +207,7 @@ si los botones llevan resistencia, y si el celular y la Pi caben juntos en el Wi
         <line x1="298" y1="58" x2="298" y2="80" stroke="#1f5e8b" stroke-width="2.4"/>
         <rect class="box" x="208" y="80" width="180" height="44" rx="6"/>
         <text x="298" y="99" text-anchor="middle" font-size="13.5" font-weight="500">Fusible propio 5 A</text>
-        <text x="298" y="116" text-anchor="middle" font-size="12" class="s">circuito que se apaga con la llave</text>
+        <text x="298" y="116" text-anchor="middle" font-size="12" class="s">se apaga con la llave</text>
         <line x1="298" y1="124" x2="298" y2="144" stroke="#1f5e8b" stroke-width="2.4"/>
         <rect class="box" x="208" y="144" width="180" height="44" rx="6"/>
         <text x="298" y="163" text-anchor="middle" font-size="13.5" font-weight="500">TVS SMBJ24A</text>
@@ -207,31 +216,36 @@ si los botones llevan resistencia, y si el celular y la Pi caben juntos en el Wi
         <rect class="box" x="208" y="208" width="180" height="44" rx="6"/>
         <text x="298" y="227" text-anchor="middle" font-size="13.5" font-weight="500">Convertidor 12 → 5 V</text>
         <text x="298" y="244" text-anchor="middle" font-size="12" class="s">Pololu D36V50F5</text>
-        <line x1="298" y1="252" x2="298" y2="318" stroke="#1f5e8b" stroke-width="2.4"/>
-        <text x="306" y="282" font-size="12" class="tp">5 V · USB-C</text>
-        <text x="306" y="297" font-size="12" class="tk">3 A que pide ✓</text>
-        <!-- Pi -->
-        <rect class="box" x="208" y="318" width="180" height="64" rx="6" stroke-width="2"/>
-        <text x="298" y="340" text-anchor="middle" font-size="13.5" font-weight="500">Raspberry Pi 4</text>
-        <text x="298" y="357" text-anchor="middle" font-size="12" class="s">cliente WiFi · web :8080</text>
-        <text x="298" y="373" text-anchor="middle" font-size="12" class="s">GPIO17 · GPIO27 · GND</text>
-        <!-- pantalla -->
-        <line x1="255" y1="382" x2="255" y2="412" stroke="currentColor" stroke-width="2"/>
-        <text x="262" y="402" font-size="12" class="s">micro-HDMI</text>
-        <rect class="box" x="208" y="412" width="112" height="44" rx="6"/>
-        <text x="264" y="431" text-anchor="middle" font-size="13.5" font-weight="500">Pantalla</text>
-        <text x="264" y="448" text-anchor="middle" font-size="12" class="tb">por definir</text>
-        <!-- botones -->
-        <line x1="356" y1="382" x2="356" y2="476" stroke="#8a6d00" stroke-width="2.4"/>
-        <rect class="box" x="236" y="476" width="152" height="46" rx="6"/>
-        <text x="312" y="495" text-anchor="middle" font-size="13.5" font-weight="500">Botones ▶ ◀</text>
-        <text x="312" y="512" text-anchor="middle" font-size="12" class="s">en el manubrio</text>
+        <line x1="298" y1="252" x2="298" y2="410" stroke="#1f5e8b" stroke-width="2.4"/>
+        <text x="306" y="300" font-size="12" class="tp">5 V · USB-C</text>
+        <text x="306" y="315" font-size="12" class="tk">3 A que pide ✓</text>
+        <!-- Pi, al frente -->
+        <rect class="box" x="15" y="410" width="373" height="64" rx="6" stroke-width="2"/>
+        <text x="201" y="434" text-anchor="middle" font-size="13.5" font-weight="500">Raspberry Pi 4 · al frente, cerca del manubrio</text>
+        <text x="201" y="453" text-anchor="middle" font-size="12" class="s">cliente WiFi del ELM · web :8080</text>
+        <text x="201" y="468" text-anchor="middle" font-size="12" class="s">el ELM se queda atrás, bajo el asiento</text>
+        <!-- periféricos -->
+        <line x1="75" y1="474" x2="75" y2="508" stroke="#6b3fa0" stroke-width="2.4"/>
+        <text x="81" y="496" font-size="12" class="td">micro-HDMI</text>
+        <line x1="200" y1="474" x2="200" y2="508" stroke="#6b3fa0" stroke-width="2.4"/>
+        <text x="206" y="496" font-size="12" class="td">I²C 0x36</text>
+        <line x1="326" y1="474" x2="326" y2="508" stroke="#8a6d00" stroke-width="2.4"/>
+        <text x="332" y="496" font-size="12" class="tg">GPIO</text>
+        <rect class="box" x="15" y="508" width="120" height="46" rx="6"/>
+        <text x="75" y="527" text-anchor="middle" font-size="13.5" font-weight="500">Pantalla</text>
+        <text x="75" y="544" text-anchor="middle" font-size="12" class="s">HDMI</text>
+        <rect class="box" x="141" y="508" width="120" height="46" rx="6"/>
+        <text x="201" y="527" text-anchor="middle" font-size="13.5" font-weight="500">Dirección</text>
+        <text x="201" y="544" text-anchor="middle" font-size="12" class="s">AS5600</text>
+        <rect class="box" x="267" y="508" width="121" height="46" rx="6"/>
+        <text x="327" y="527" text-anchor="middle" font-size="13.5" font-weight="500">Botones ▶ ◀</text>
+        <text x="327" y="544" text-anchor="middle" font-size="12" class="s">manubrio</text>
       </svg>
     </div>
     <div class="leyenda">
       <span><i style="border-color:#1f5e8b"></i>potencia</span>
       <span><i style="border-color:var(--gnd)"></i>tierra</span>
-      <span><i style="border-color:#6b3fa0"></i>datos (punteado = WiFi)</span>
+      <span><i style="border-color:#6b3fa0"></i>datos, HDMI e I²C (punteado = WiFi)</span>
       <span><i style="border-color:#8a6d00"></i>señal de botones</span>
     </div>
   </div>
@@ -243,11 +257,13 @@ si los botones llevan resistencia, y si el celular y la Pi caben juntos en el Wi
     La razón está en la sección 2: el +12 V de ese conector es el que alimenta a la ECU.</p>
     <p>Las dos tierras terminan en el chasis: la del ELM por el cable BK/Y del conector y la de la Pi por el negativo del convertidor.
     Como el ELM y la Pi solo se hablan por radio, no hace falta unir sus tierras con un cable.</p>
+    <p><b>La Pi va al frente, no bajo el asiento.</b> Ahí están la pantalla, los botones y el sensor de dirección. El I²C del sensor necesita menos de 50 cm de cable,
+    y la caja de fusibles también está al frente, bajo la cubierta interior izquierda (p. 587). Lo único que se queda atrás es el ELM, y ese habla por radio.</p>
     <p class="why">El celular no lee la moto: abre la página que sirve la Pi. Si abriera una app OBD, le quitaría la conexión a la Pi (ver la duda 4).</p>
     <div class="caja" style="margin-top:14px">
       <h3 class="t-dat">Plan B, si el Steren no pasa la prueba</h3>
-      <p style="margin:0">Se cambia el ELM WiFi por un <b>OBDLink EX</b> conectado por USB a la Pi. Así la Pi deja de depender del WiFi del ELM
-      y puede crear su propia red para el celular. El cable adaptador y todo lo demás se quedan igual.</p>
+      <p style="margin:0">Se cambia el ELM WiFi por un <b>OBDLink EX</b> conectado por USB a la Pi, con un cable que va de bajo el asiento hasta el frente.
+      Así la Pi deja de depender del WiFi del ELM y puede crear su propia red para el celular. El cable adaptador y todo lo demás se quedan igual.</p>
     </div>
   </div>
 </div>
@@ -303,7 +319,7 @@ si los botones llevan resistencia, y si el celular y la Pi caben juntos en el Wi
 
   <div>
     <div class="esq">
-      <svg viewBox="0 0 400 400" role="img" aria-label="Esquemático: batería, fusibles y relevador de la ECU alimentan el cable BR/W, que llega a la ECU y al conector KDS; el adaptador lleva BR/W al pin 16, BK/Y a 4 y 5, y las dos líneas de comunicación a 7 y 15 del ELM327">
+      <svg viewBox="0 0 400 470" role="img" aria-label="Esquemático: batería, fusibles y relevador de la ECU alimentan el cable BR/W, que llega a la ECU y al conector KDS; el adaptador lleva BR/W al pin 16, BK/Y a 4 y 5, y las dos líneas de comunicación a 7 y 15 del ELM327">
         <!-- batería -->
         <line x1="22" y1="22" x2="22" y2="40" stroke="#1f5e8b" stroke-width="2.6"/>
         <line x1="30" y1="26" x2="30" y2="36" stroke="#1f5e8b" stroke-width="2.6"/>
@@ -315,55 +331,54 @@ si los botones llevan resistencia, y si el celular y la Pi caben juntos en el Wi
         <text x="180" y="44" text-anchor="middle" font-size="12.5">relevador principal de la ECU</text>
         <text x="306" y="36" font-size="12" class="s">p. 131</text>
         <!-- bajada BR/W -->
-        <line x1="130" y1="52" x2="130" y2="120" stroke="#1f5e8b" stroke-width="2.4"/>
-        <text x="138" y="72" font-size="12" class="tp">0 V con llave OFF</text>
-        <text x="138" y="87" font-size="12" class="tp">batería con llave ON</text>
-        <text x="138" y="102" font-size="12" class="tk">14.3–14.7 V con motor ✓</text>
+        <line x1="130" y1="52" x2="130" y2="170" stroke="#1f5e8b" stroke-width="2.4"/>
+        <text x="138" y="80" font-size="12" class="tp">0 V con llave OFF</text>
+        <text x="138" y="96" font-size="12" class="tp">batería con llave ON</text>
+        <text x="138" y="112" font-size="12" class="tk">14.3–14.7 V con motor ✓</text>
         <!-- ECU -->
-        <rect class="box" x="10" y="100" width="70" height="200" rx="6" stroke-width="1.8"/>
-        <text x="45" y="210" text-anchor="middle" font-size="13.5" font-weight="500">ECU</text>
-        <text x="74" y="124" text-anchor="end" font-size="12" class="s">6</text>
-        <text x="74" y="174" text-anchor="end" font-size="12" class="s">31</text>
-        <text x="74" y="224" text-anchor="end" font-size="12" class="s">48</text>
-        <text x="74" y="274" text-anchor="end" font-size="12" class="s">39</text>
+        <rect class="box" x="10" y="150" width="70" height="200" rx="6" stroke-width="1.8"/>
+        <text x="45" y="260" text-anchor="middle" font-size="13.5" font-weight="500">ECU</text>
+        <text x="74" y="174" text-anchor="end" font-size="12" class="s">6</text>
+        <text x="74" y="224" text-anchor="end" font-size="12" class="s">31</text>
+        <text x="74" y="274" text-anchor="end" font-size="12" class="s">48</text>
+        <text x="74" y="324" text-anchor="end" font-size="12" class="s">39</text>
         <!-- conector KDS -->
-        <rect x="186" y="104" width="16" height="188" rx="3" fill="none" stroke="currentColor" stroke-width="1.6"/>
-        <text x="194" y="98" text-anchor="middle" font-size="12" font-weight="500">KDS</text>
+        <rect x="186" y="154" width="16" height="188" rx="3" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        <text x="194" y="144" text-anchor="middle" font-size="12" font-weight="500">KDS</text>
         <!-- filas -->
-        <line x1="80" y1="120" x2="186" y2="120" stroke="#1f5e8b" stroke-width="2.4"/>
-        <circle cx="130" cy="120" r="4" fill="#1f5e8b"/>
-        <text x="146" y="114" font-size="12" class="tp">BR/W</text>
-        <line x1="80" y1="170" x2="186" y2="170" stroke="#6b3fa0" stroke-width="2.4"/>
-        <text x="96" y="164" font-size="12" class="td">LG/BK</text>
+        <line x1="80" y1="170" x2="186" y2="170" stroke="#1f5e8b" stroke-width="2.4"/>
+        <circle cx="130" cy="170" r="4" fill="#1f5e8b"/>
+        <text x="146" y="164" font-size="12" class="tp">BR/W</text>
         <line x1="80" y1="220" x2="186" y2="220" stroke="#6b3fa0" stroke-width="2.4"/>
-        <text x="96" y="214" font-size="12" class="td">GY/W</text>
-        <line x1="80" y1="270" x2="186" y2="270" stroke="currentColor" stroke-width="2.4"/>
-        <text x="96" y="264" font-size="12">BK/Y</text>
-        <circle cx="150" cy="270" r="4" fill="currentColor"/>
-        <line x1="150" y1="270" x2="150" y2="318" stroke="currentColor" stroke-width="2"/>
-        <line x1="138" y1="318" x2="162" y2="318" stroke="currentColor" stroke-width="2"/>
-        <line x1="142" y1="323" x2="158" y2="323" stroke="currentColor" stroke-width="2"/>
-        <line x1="146" y1="328" x2="154" y2="328" stroke="currentColor" stroke-width="2"/>
-        <text x="166" y="326" font-size="12" class="s">chasis · 0 V</text>
+        <text x="96" y="214" font-size="12" class="td">LG/BK</text>
+        <line x1="80" y1="270" x2="186" y2="270" stroke="#6b3fa0" stroke-width="2.4"/>
+        <text x="96" y="264" font-size="12" class="td">GY/W</text>
+        <line x1="80" y1="320" x2="186" y2="320" stroke="currentColor" stroke-width="2.4"/>
+        <text x="96" y="314" font-size="12">BK/Y</text>
+        <circle cx="150" cy="320" r="4" fill="currentColor"/>
+        <line x1="150" y1="320" x2="150" y2="368" stroke="currentColor" stroke-width="2"/>
+        <line x1="138" y1="368" x2="162" y2="368" stroke="currentColor" stroke-width="2"/>
+        <line x1="142" y1="373" x2="158" y2="373" stroke="currentColor" stroke-width="2"/>
+        <line x1="146" y1="378" x2="154" y2="378" stroke="currentColor" stroke-width="2"/>
+        <text x="166" y="377" font-size="12" class="s">chasis · 0 V</text>
         <!-- adaptador -->
-        <line x1="202" y1="120" x2="300" y2="120" stroke="#1f5e8b" stroke-width="2.4"/>
-        <line x1="202" y1="170" x2="300" y2="170" stroke="#6b3fa0" stroke-width="2.4"/>
+        <line x1="202" y1="170" x2="300" y2="170" stroke="#1f5e8b" stroke-width="2.4"/>
         <line x1="202" y1="220" x2="300" y2="220" stroke="#6b3fa0" stroke-width="2.4"/>
-        <line x1="202" y1="270" x2="300" y2="270" stroke="currentColor" stroke-width="2.4"/>
-        <text x="251" y="112" text-anchor="middle" font-size="12" class="s">adaptador</text>
+        <line x1="202" y1="270" x2="300" y2="270" stroke="#6b3fa0" stroke-width="2.4"/>
+        <line x1="202" y1="320" x2="300" y2="320" stroke="currentColor" stroke-width="2.4"/>
+        <text x="251" y="160" text-anchor="middle" font-size="12" class="s">adaptador</text>
         <!-- ELM -->
-        <rect class="box" x="300" y="100" width="92" height="200" rx="6" stroke-width="1.8"/>
-        <text x="346" y="96" text-anchor="middle" font-size="12" font-weight="500">ELM327</text>
-        <text x="308" y="124" font-size="12" class="tp">16 · +12 V</text>
-        <text x="308" y="174" font-size="12" class="td">7 ó 15</text>
-        <text x="308" y="224" font-size="12" class="td">15 ó 7</text>
-        <text x="308" y="274" font-size="12">4 + 5 · GND</text>
-        <text x="346" y="200" text-anchor="middle" font-size="12" class="s">K = 7</text>
-        <text x="346" y="215" text-anchor="middle" font-size="12" class="s">L = 15</text>
+        <rect class="box" x="300" y="150" width="92" height="200" rx="6" stroke-width="1.8"/>
+        <text x="346" y="144" text-anchor="middle" font-size="12" font-weight="500">ELM327</text>
+        <text x="308" y="174" font-size="12" class="tp">16 · +12 V</text>
+        <text x="308" y="224" font-size="12" class="td">7 ó 15</text>
+        <text x="308" y="274" font-size="12" class="td">15 ó 7</text>
+        <text x="308" y="324" font-size="12">4 + 5 · GND</text>
+        <text x="392" y="396" text-anchor="end" font-size="12" class="s">en el ELM: K = 7 · L = 15</text>
         <!-- notas -->
-        <text x="10" y="356" font-size="12" class="td">Línea K: señal de 0–12 V, no alimenta nada.</text>
-        <text x="10" y="372" font-size="12" class="tb">¿GY/W o LG/BK es la K? El manual no lo dice.</text>
-        <text x="10" y="388" font-size="12" class="tk">ELM sin corriente con llave OFF → no drena la batería ✓</text>
+        <text x="10" y="420" font-size="12" class="td">Línea K: señal de 0–12 V, no alimenta nada.</text>
+        <text x="10" y="436" font-size="12" class="tb">¿GY/W o LG/BK es la K? El manual no lo dice.</text>
+        <text x="10" y="452" font-size="12" class="tk">ELM sin corriente con llave OFF → no drena la batería ✓</text>
       </svg>
     </div>
     <p class="tiny sub" style="margin-top:6px">El punto en BR/W marca el nodo: el mismo cable alimenta el pin 6 de la ECU y llega al conector KDS.
@@ -391,26 +406,38 @@ si los botones llevan resistencia, y si el celular y la Pi caben juntos en el Wi
       <div class="hdrlab"><span>fila del borde (pares)</span></div>
       <div class="hdr">
         <div><b>2</b>5V</div><div><b>4</b>5V</div><div class="h-bad"><b>6</b>GND ✗</div><div><b>8</b>G14</div><div><b>10</b>G15</div><div><b>12</b>G18</div><div class="h-bad"><b>14</b>GND ✗</div>
-        <div class="h-pwr"><b>1</b>3V3 opc.</div><div><b>3</b>G2</div><div><b>5</b>G3</div><div><b>7</b>G4</div><div class="h-gnd"><b>9</b>GND</div><div class="h-sig"><b>11</b>G17</div><div class="h-sig"><b>13</b>G27</div>
+        <div class="h-pwr3"><b>1</b>3V3</div><div class="h-dat"><b>3</b>SDA</div><div class="h-dat"><b>5</b>SCL</div><div><b>7</b>vacío</div><div class="h-gnd"><b>9</b>GND</div><div class="h-sig"><b>11</b>G17</div><div class="h-sig"><b>13</b>G27</div>
       </div>
       <div class="hdrlab"><span>fila de adentro (impares)</span></div>
-      <p class="tiny sub" style="margin:8px 0 0">9, 11 y 13 son consecutivos en la misma fila: caben en un solo conector Dupont de 3 vías (GND · siguiente · anterior).
+      <p class="tiny sub" style="margin:8px 0 0">Todo lo que se cablea está en la fila de adentro, del 1 al 13. Cabe en un solo conector Dupont de 1 × 7:
+      3V3 · SDA · SCL · (vacío) · GND · ▶ · ◀. Las tierras del sensor y de los botones se unen en el terminal del pin 9.
       Los rayados (6 y 14) están <b>dañados en la Pi de membrane-rig</b>. Por eso la tierra va al 9, que funciona en esa Pi y en una nueva.</p>
     </div>
 
     <h3>A dónde va cada pin</h3>
+    <div class="fila"><div class="chip c-pwr"></div><div class="nom t-pwr">pin 1 · 3.3 V</div>
+      <div><div class="dst">→ VCC del AS5600</div>
+      <div class="why">A 3.3 V y nunca a 5 V: el módulo jala SDA y SCL hacia su propio VCC, y la Pi solo aguanta 3.3 V en esos pines.
+      Del mismo hilo salen los pull-ups opcionales de los botones.</div></div></div>
+    <div class="fila"><div class="chip c-dat"></div><div class="nom t-dat">pin 3 · GPIO2</div>
+      <div><div class="dst">→ SDA del AS5600</div>
+      <div class="why">Bus I²C 1. La Pi ya trae pull-ups fijos en GPIO2 y GPIO3 (documentación oficial): no agregues otros.</div></div></div>
+    <div class="fila"><div class="chip c-dat"></div><div class="nom t-dat">pin 5 · GPIO3</div>
+      <div><div class="dst">→ SCL del AS5600</div>
+      <div class="why">El reloj del bus, a 100 kHz por defecto. Se activa con <code>dtparam=i2c_arm=on</code>.</div></div></div>
+    <div class="fila"><div class="chip c-off"></div><div class="nom t-off">pin 7 · GPIO4</div>
+      <div><div class="dst t-off">sin conectar (hueco vacío del Dupont)</div>
+      <div class="why">Se deja libre para que el conector de 7 vías no toque nada.</div></div></div>
     <div class="fila"><div class="chip c-gnd"></div><div class="nom">pin 9 · GND</div>
-      <div><div class="dst">→ terminal común de los dos botones</div>
-      <div class="why">Es el retorno de los botones y va por su propio hilo hasta el manubrio, no al chasis, para que el ruido del arnés no entre por ahí.</div></div></div>
+      <div><div class="dst">→ GND del AS5600 y terminal común de los dos botones</div>
+      <div class="why">Es el retorno de los dos, por su propio hilo hasta el frente, no por el chasis, para que el ruido del arnés no entre por ahí.
+      Une los dos hilos en un solo terminal, sin empalmes sueltos.</div></div></div>
     <div class="fila"><div class="chip c-sig"></div><div class="nom t-sig">pin 11 · GPIO17</div>
       <div><div class="dst">→ botón ▶ siguiente (otra terminal a GND)</div>
       <div class="why">El overlay lo convierte en la tecla → (keycode 106), que la versión Python y la de C++ ya leen como «siguiente».</div></div></div>
     <div class="fila"><div class="chip c-sig"></div><div class="nom t-sig">pin 13 · GPIO27</div>
       <div><div class="dst">→ botón ◀ anterior (otra terminal a GND)</div>
       <div class="why">La tecla ← (keycode 105). Suelto marca 3.3 V y presionado 0 V.</div></div></div>
-    <div class="fila"><div class="chip c-pwr"></div><div class="nom t-pwr">pin 1 · 3.3 V</div>
-      <div><div class="dst">→ solo si pones el acondicionamiento opcional</div>
-      <div class="why">Alimenta los pull-ups externos de 4.7 kΩ. Si no los pones, se queda sin conectar.</div></div></div>
     <div class="fila"><div class="chip c-pwr"></div><div class="nom t-pwr">USB-C</div>
       <div><div class="dst">→ VOUT y GND del convertidor</div>
       <div class="why">Es la entrada documentada de 5 V / 3 A. No uses los pines 2 y 4: en la Pi de membrane-rig, el 6 (la tierra de junto) está muerto.</div></div></div>
@@ -422,11 +449,13 @@ si los botones llevan resistencia, y si el celular y la Pi caben juntos en el Wi
       <div class="why">Están dañados. Medir contra ellos da 0 V y continuidad abierta en todo, y una Pi sana parece muerta. El 14 está justo al lado del 13: no fuerces un cable ahí.</div></div></div>
     <div class="fila"><div class="chip c-off"></div><div class="nom t-off">el resto</div>
       <div><div class="dst t-off">sin conectar</div>
-      <div class="why">Si después compras una HAT de apagado (CarPiHAT), esa ocupa el 17 y el 27: ver «Qué comprar».</div></div></div>
+      <div class="why">Si después compras una HAT de apagado (CarPiHAT), esa ocupa el 17 y el 27 y tapa el header: ver «Qué comprar».</div></div></div>
 
     <div class="caja" style="margin-top:14px">
       <h3>En <code>/boot/firmware/config.txt</code>, con los comentarios en su propia línea</h3>
-<pre># Boton siguiente (flecha derecha) - pin 11
+<pre># I2C 1 para el sensor de direccion AS5600 (pines 3 y 5)
+dtparam=i2c_arm=on
+# Boton siguiente (flecha derecha) - pin 11
 dtoverlay=gpio-key,gpio=17,active_low=1,gpio_pull=up,keycode=106
 # Boton anterior (flecha izquierda) - pin 13
 dtoverlay=gpio-key,gpio=27,active_low=1,gpio_pull=up,keycode=105</pre>
@@ -457,7 +486,7 @@ dtoverlay=gpio-key,gpio=27,active_low=1,gpio_pull=up,keycode=105</pre>
         <line x1="98" y1="170" x2="122" y2="170" stroke="currentColor" stroke-width="2"/>
         <line x1="98" y1="177" x2="122" y2="177" stroke="currentColor" stroke-width="2"/>
         <line x1="110" y1="177" x2="110" y2="236" stroke="currentColor" stroke-width="1.4" stroke-dasharray="4 3"/>
-        <text x="80" y="198" font-size="12" class="s">100 nF</text>
+        <text x="52" y="178" font-size="12" class="s">100 nF</text>
         <!-- salida de la Pi -->
         <line x1="110" y1="120" x2="172" y2="120" stroke="#8a6d00" stroke-width="2"/>
         <!-- 1k serie opcional -->
@@ -506,58 +535,58 @@ dtoverlay=gpio-key,gpio=27,active_low=1,gpio_pull=up,keycode=105</pre>
     </div>
 
     <div class="esq" style="margin-top:18px">
-      <svg viewBox="0 0 400 300" role="img" aria-label="Esquemático de alimentación: toma de fusible de 5 amperes en un circuito con llave, diodo TVS a tierra, convertidor Pololu D36V50F5 y salida de 5 volts al USB-C de la Pi">
+      <svg viewBox="0 0 400 330" role="img" aria-label="Esquemático de alimentación: toma de fusible de 5 amperes en un circuito con llave, diodo TVS a tierra, convertidor Pololu D36V50F5 y salida de 5 volts al USB-C de la Pi">
         <text x="10" y="18" font-size="12" font-weight="500">Alimentación mínima (sin apagado seguro)</text>
-        <rect class="box" x="10" y="34" width="86" height="58" rx="5"/>
-        <text x="53" y="54" text-anchor="middle" font-size="12">caja de</text>
-        <text x="53" y="69" text-anchor="middle" font-size="12">fusibles</text>
-        <text x="53" y="84" text-anchor="middle" font-size="12" class="s">con llave</text>
-        <line x1="96" y1="63" x2="112" y2="63" stroke="#1f5e8b" stroke-width="2.4"/>
+        <text x="150" y="62" font-size="12" class="tp">14.3–14.7 V con motor</text>
+        <rect class="box" x="10" y="72" width="86" height="58" rx="5"/>
+        <text x="53" y="92" text-anchor="middle" font-size="12">caja de</text>
+        <text x="53" y="107" text-anchor="middle" font-size="12">fusibles</text>
+        <text x="53" y="122" text-anchor="middle" font-size="12" class="s">con llave</text>
+        <line x1="96" y1="100" x2="112" y2="100" stroke="#1f5e8b" stroke-width="2.4"/>
         <!-- fusible -->
-        <rect x="112" y="56" width="34" height="14" rx="3" fill="none" stroke="currentColor" stroke-width="1.6"/>
-        <line x1="112" y1="63" x2="146" y2="63" stroke="currentColor" stroke-width="1.2"/>
-        <text x="129" y="50" text-anchor="middle" font-size="12">5 A</text>
-        <line x1="146" y1="63" x2="232" y2="63" stroke="#1f5e8b" stroke-width="2.4"/>
-        <circle cx="176" cy="63" r="4" fill="#1f5e8b"/>
-        <text x="150" y="30" font-size="12" class="tp">14.3–14.7 V con motor</text>
+        <rect x="112" y="93" width="34" height="14" rx="3" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        <line x1="112" y1="100" x2="146" y2="100" stroke="currentColor" stroke-width="1.2"/>
+        <text x="129" y="87" text-anchor="middle" font-size="12">5 A</text>
+        <line x1="146" y1="100" x2="236" y2="100" stroke="#1f5e8b" stroke-width="2.4"/>
+        <circle cx="176" cy="100" r="4" fill="#1f5e8b"/>
         <!-- TVS -->
-        <line x1="176" y1="63" x2="176" y2="96" stroke="#1f5e8b" stroke-width="2"/>
-        <polygon points="168,112 184,112 176,98" fill="none" stroke="currentColor" stroke-width="1.6"/>
-        <polyline points="166,94 168,98 184,98 186,102" fill="none" stroke="currentColor" stroke-width="1.6"/>
-        <line x1="176" y1="112" x2="176" y2="150" stroke="currentColor" stroke-width="2"/>
-        <text x="190" y="106" font-size="12">TVS SMBJ24A</text>
-        <text x="190" y="121" font-size="12" class="s">banda (cátodo) al +</text>
+        <line x1="176" y1="100" x2="176" y2="132" stroke="#1f5e8b" stroke-width="2"/>
+        <polyline points="166,130 168,134 184,134 186,138" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        <polygon points="168,148 184,148 176,134" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        <line x1="176" y1="148" x2="176" y2="190" stroke="currentColor" stroke-width="2"/>
+        <text x="166" y="160" text-anchor="end" font-size="12">TVS SMBJ24A</text>
+        <text x="166" y="176" text-anchor="end" font-size="12" class="s">banda (cátodo) al +</text>
         <!-- Pololu -->
-        <rect class="box" x="232" y="40" width="88" height="96" rx="5" stroke-width="1.8"/>
-        <text x="276" y="30" text-anchor="middle" font-size="12" font-weight="500">D36V50F5</text>
-        <text x="238" y="67" font-size="12">VIN</text>
-        <text x="238" y="125" font-size="12">GND</text>
-        <text x="314" y="67" text-anchor="end" font-size="12">VOUT</text>
-        <text x="314" y="125" text-anchor="end" font-size="12">GND</text>
-        <text x="276" y="88" text-anchor="middle" font-size="12" class="to">EN · PG · VRP</text>
-        <text x="276" y="103" text-anchor="middle" font-size="12" class="to">sin conectar</text>
-        <line x1="320" y1="63" x2="352" y2="63" stroke="#1f5e8b" stroke-width="2.4"/>
-        <line x1="320" y1="121" x2="352" y2="121" stroke="currentColor" stroke-width="2.4"/>
-        <rect class="box" x="352" y="40" width="40" height="96" rx="5"/>
-        <text x="372" y="84" text-anchor="middle" font-size="12" font-weight="500">Pi</text>
-        <text x="372" y="99" text-anchor="middle" font-size="12" class="s">USB-C</text>
+        <rect class="box" x="236" y="72" width="88" height="104" rx="5" stroke-width="1.8"/>
+        <text x="280" y="88" text-anchor="middle" font-size="12" font-weight="500">D36V50F5</text>
+        <text x="242" y="104" font-size="12">VIN</text>
+        <text x="318" y="104" text-anchor="end" font-size="12">VOUT</text>
+        <text x="280" y="126" text-anchor="middle" font-size="12" class="to">EN · PG · VRP</text>
+        <text x="280" y="141" text-anchor="middle" font-size="12" class="to">sin conectar</text>
+        <text x="242" y="166" font-size="12">GND</text>
+        <text x="318" y="166" text-anchor="end" font-size="12">GND</text>
+        <line x1="324" y1="100" x2="352" y2="100" stroke="#1f5e8b" stroke-width="2.4"/>
+        <text x="328" y="92" font-size="12" class="tp">5 V</text>
+        <line x1="324" y1="162" x2="352" y2="162" stroke="currentColor" stroke-width="2.4"/>
+        <rect class="box" x="352" y="72" width="40" height="104" rx="5"/>
+        <text x="372" y="120" text-anchor="middle" font-size="12" font-weight="500">Pi</text>
+        <text x="372" y="135" text-anchor="middle" font-size="12" class="s">USB-C</text>
         <!-- tierra común -->
-        <line x1="232" y1="121" x2="214" y2="121" stroke="currentColor" stroke-width="2"/>
-        <line x1="214" y1="121" x2="214" y2="150" stroke="currentColor" stroke-width="2"/>
-        <line x1="176" y1="150" x2="214" y2="150" stroke="currentColor" stroke-width="2"/>
-        <circle cx="196" cy="150" r="4" fill="currentColor"/>
-        <line x1="196" y1="150" x2="196" y2="166" stroke="currentColor" stroke-width="2"/>
-        <line x1="184" y1="166" x2="208" y2="166" stroke="currentColor" stroke-width="2"/>
-        <line x1="188" y1="171" x2="204" y2="171" stroke="currentColor" stroke-width="2"/>
-        <line x1="192" y1="176" x2="200" y2="176" stroke="currentColor" stroke-width="2"/>
-        <text x="214" y="176" font-size="12" class="s">negativo de batería / chasis</text>
-        <!-- voltajes -->
-        <text x="326" y="56" font-size="12" class="tp">5.0 V</text>
-        <text x="10" y="208" font-size="12" class="tk">TVS: deja pasar 14.7 V y recorta los picos a ≤ 38.9 V ✓</text>
-        <text x="10" y="224" font-size="12" class="tk">El D36V50F5 aguanta hasta 50 V en la entrada ✓</text>
-        <text x="10" y="240" font-size="12" class="tk">Salida 5 V ±4 %, hasta 5.5 A; la Pi pide 3 A ✓</text>
-        <text x="10" y="262" font-size="12" class="tb">✗ No tomes estos 12 V del BR/W del conector KDS:</text>
-        <text x="10" y="278" font-size="12" class="tb">un corto ahí funde el fusible de la ECU con la moto andando.</text>
+        <line x1="236" y1="162" x2="214" y2="162" stroke="currentColor" stroke-width="2"/>
+        <line x1="214" y1="162" x2="214" y2="190" stroke="currentColor" stroke-width="2"/>
+        <line x1="176" y1="190" x2="214" y2="190" stroke="currentColor" stroke-width="2"/>
+        <circle cx="196" cy="190" r="4" fill="currentColor"/>
+        <line x1="196" y1="190" x2="196" y2="206" stroke="currentColor" stroke-width="2"/>
+        <line x1="184" y1="206" x2="208" y2="206" stroke="currentColor" stroke-width="2"/>
+        <line x1="188" y1="211" x2="204" y2="211" stroke="currentColor" stroke-width="2"/>
+        <line x1="192" y1="216" x2="200" y2="216" stroke="currentColor" stroke-width="2"/>
+        <text x="214" y="214" font-size="12" class="s">negativo de batería / chasis</text>
+        <!-- notas -->
+        <text x="10" y="246" font-size="12" class="tk">TVS: deja pasar 14.7 V y recorta los picos a ≤ 38.9 V ✓</text>
+        <text x="10" y="262" font-size="12" class="tk">El D36V50F5 aguanta hasta 50 V en la entrada ✓</text>
+        <text x="10" y="278" font-size="12" class="tk">Salida 5.0 V ±4 %, hasta 5.5 A; la Pi pide 3 A ✓</text>
+        <text x="10" y="300" font-size="12" class="tb">✗ No tomes estos 12 V del BR/W del conector KDS:</text>
+        <text x="10" y="316" font-size="12" class="tb">un corto ahí funde el fusible de la ECU con la moto andando.</text>
       </svg>
     </div>
     <p class="tiny sub" style="margin-top:6px">Cable de 5 V a la Pi corto y grueso (≥ 20 AWG): el Pololu da 5.0 V y la fuente oficial da 5.1 V, así que cualquier caída en el cable cuenta.
@@ -566,19 +595,164 @@ dtoverlay=gpio-key,gpio=27,active_low=1,gpio_pull=up,keycode=105</pre>
 </div>
 
 <!-- ======================================================= -->
-<h2>4 · WiFi: quién se conecta a quién</h2>
+<h2>4 · Sensor de dirección AS5600</h2>
+
+<div class="cols">
+  <div class="lista">
+    <div class="caja">
+      <h3>La pieza: módulo con el chip ams AS5600 y un imán diametral</h3>
+      <p class="why" style="margin:0">Los módulos genéricos traen 7 pines: VCC, GND, SDA, SCL, DIR, OUT y GPO. <span class="pend">por confirmar</span> el orden:
+      cambia entre fabricantes, así que guíate por la serigrafía de tu módulo, no por la posición.
+      A 3.3 V, el chip necesita sus pines VDD5V y VDD3V3 unidos (datasheet de ams). Revisa si tu módulo trae un puente o una resistencia de 0 Ω para eso.</p>
+    </div>
+    <h3>A dónde va cada pin del módulo</h3>
+    <div class="fila"><div class="chip c-pwr"></div><div class="nom t-pwr">VCC</div>
+      <div><div class="dst">→ pin 1 de la Pi (3.3 V)</div>
+      <div class="why">Gasta unos mA. A 5 V, los pull-ups del módulo pondrían 5 V en SDA y SCL de la Pi.</div></div></div>
+    <div class="fila"><div class="chip c-gnd"></div><div class="nom">GND</div>
+      <div><div class="dst">→ pin 9 de la Pi</div>
+      <div class="why">La misma tierra que los botones. En la Pi del laboratorio, nunca al 6 ni al 14.</div></div></div>
+    <div class="fila"><div class="chip c-dat"></div><div class="nom t-dat">SDA</div>
+      <div><div class="dst">→ pin 3 (GPIO2)</div>
+      <div class="why">Dirección 0x36 en el bus 1. El software lee el registro STATUS (0x0B) y el ángulo crudo (0x0C–0x0D) 25 veces por segundo.</div></div></div>
+    <div class="fila"><div class="chip c-dat"></div><div class="nom t-dat">SCL</div>
+      <div><div class="dst">→ pin 5 (GPIO3)</div>
+      <div class="why">Va trenzado con 3.3 V y SDA trenzado con GND, para que no se crucen señales entre los dos.</div></div></div>
+    <div class="fila"><div class="chip c-gnd"></div><div class="nom">DIR</div>
+      <div><div class="dst">→ GND, en el mismo módulo</div>
+      <div class="why">Fija el sentido: con DIR a GND, el ángulo sube en sentido horario (datasheet). Al aire no está definido. Si sale al revés, se corrige con «Invertir».</div></div></div>
+    <div class="fila"><div class="chip c-off"></div><div class="nom t-off">OUT</div>
+      <div><div class="dst t-off">sin conectar</div>
+      <div class="why">Salida analógica o PWM. El software lee por I²C.</div></div></div>
+    <div class="fila"><div class="chip c-off"></div><div class="nom t-off">GPO</div>
+      <div><div class="dst t-off">sin conectar</div>
+      <div class="why">Pin de programación del chip, con pull-up interno. No se programa nada.</div></div></div>
+
+    <div class="caja" style="margin-top:14px">
+      <h3>Comprobarlo antes de montarlo en la moto</h3>
+<pre>sudo apt install i2c-tools
+i2cdetect -y 1            # debe aparecer 36
+i2cget -y 1 0x36 0x0b     # STATUS: 0x20 = hay imán
+                          # 0x08 = muy cerca o muy fuerte
+                          # 0x10 = muy lejos o muy débil
+i2cget -y 1 0x36 0x1a     # AGC: a 3.3 V va de 0 a 128; busca ~64</pre>
+      <p class="why" style="margin:0">El AGC es la ganancia automática del chip. Según el datasheet, la distancia está bien cuando el AGC queda a la mitad de su rango.
+      Ajusta la altura del soporte hasta que marque cerca de 64.</p>
+    </div>
+
+    <div class="caja">
+      <h3>Calibración (en el visor web del celular)</h3>
+      <ol style="margin:0">
+        <li>Moto derecha, rueda delantera recta. En la tarjeta DIRECCIÓN, <b>Fijar centro</b>: ese ángulo pasa a ser 0°.</li>
+        <li>Gira a la derecha: el número debe subir (+ = derecha). Si baja, <b>Invertir</b>.</li>
+        <li>Se guarda en <code>~/obd2_logs/direccion.json</code>. Repítelo si mueves el sensor o el imán.</li>
+      </ol>
+      <p class="why" style="margin:8px 0 0">El tablero avisa «sin imán» si el imán quedó lejos o descentrado, y «sin sensor» si no contesta el I²C: revisa el cable y <code>i2cdetect</code>.</p>
+    </div>
+  </div>
+
+  <div>
+    <div class="esq">
+      <svg viewBox="0 0 400 420" role="img" aria-label="Esquemático del AS5600: pin 1 a VCC, pin 3 a SDA, pin 5 a SCL y pin 9 a GND, con DIR a GND; abajo, vista lateral del montaje: soporte fijo al cuadro, sensor hacia abajo, separación de 0.5 a 3 milímetros, imán diametral en un portaimán sobre el perno de la cabeza del vástago, centrado en el eje de la dirección">
+        <!-- Pi -->
+        <rect class="box" x="10" y="20" width="100" height="176" rx="6" stroke-width="1.8"/>
+        <text x="60" y="38" text-anchor="middle" font-size="12" font-weight="500">Raspberry Pi</text>
+        <text x="104" y="64" text-anchor="end" font-size="12" class="tp">1 · 3.3 V</text>
+        <text x="104" y="104" text-anchor="end" font-size="12" class="td">3 · SDA</text>
+        <text x="104" y="144" text-anchor="end" font-size="12" class="td">5 · SCL</text>
+        <text x="104" y="184" text-anchor="end" font-size="12">9 · GND</text>
+        <text x="18" y="120" font-size="12" class="s">pull-ups</text>
+        <text x="18" y="135" font-size="12" class="s">fijos</text>
+        <!-- líneas -->
+        <line x1="110" y1="60" x2="270" y2="60" stroke="#1f5e8b" stroke-width="2.4"/>
+        <line x1="110" y1="100" x2="270" y2="100" stroke="#6b3fa0" stroke-width="2.4"/>
+        <line x1="110" y1="140" x2="270" y2="140" stroke="#6b3fa0" stroke-width="2.4"/>
+        <line x1="110" y1="180" x2="270" y2="180" stroke="currentColor" stroke-width="2.4"/>
+        <text x="190" y="52" text-anchor="middle" font-size="12" class="tk">3.3 V ✓ (nunca 5 V)</text>
+        <text x="190" y="92" text-anchor="middle" font-size="12" class="td">0–3.3 V · 0x36</text>
+        <text x="190" y="132" text-anchor="middle" font-size="12" class="td">100 kHz</text>
+        <text x="190" y="172" text-anchor="middle" font-size="12" class="s">0 V</text>
+        <text x="190" y="18" text-anchor="middle" font-size="12" class="s">cable &lt; 50 cm, trenzado</text>
+        <!-- DIR a GND -->
+        <line x1="270" y1="206" x2="248" y2="206" stroke="currentColor" stroke-width="2"/>
+        <line x1="248" y1="206" x2="248" y2="180" stroke="currentColor" stroke-width="2"/>
+        <circle cx="248" cy="180" r="4" fill="currentColor"/>
+        <text x="200" y="222" font-size="12" class="s">DIR a GND</text>
+        <!-- módulo -->
+        <rect class="box" x="270" y="20" width="120" height="200" rx="6" stroke-width="1.8"/>
+        <text x="330" y="38" text-anchor="middle" font-size="12" font-weight="500">AS5600</text>
+        <text x="278" y="64" font-size="12" class="tp">VCC</text>
+        <text x="278" y="104" font-size="12" class="td">SDA</text>
+        <text x="278" y="144" font-size="12" class="td">SCL</text>
+        <text x="278" y="184" font-size="12">GND</text>
+        <text x="278" y="210" font-size="12">DIR</text>
+        <text x="384" y="104" text-anchor="end" font-size="12" class="to">OUT</text>
+        <text x="384" y="144" text-anchor="end" font-size="12" class="to">GPO</text>
+        <text x="384" y="160" text-anchor="end" font-size="12" class="to">sin conectar</text>
+        <!-- vista lateral del montaje -->
+        <text x="10" y="252" font-size="12" font-weight="500">Vista lateral del montaje</text>
+        <line x1="300" y1="254" x2="300" y2="370" stroke="currentColor" stroke-width="1" stroke-dasharray="6 4"/>
+        <text x="392" y="246" text-anchor="end" font-size="12" class="s">eje de la dirección</text>
+        <!-- soporte fijo -->
+        <rect x="236" y="262" width="150" height="10" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        <line x1="240" y1="262" x2="250" y2="272" stroke="currentColor" stroke-width="1"/>
+        <line x1="256" y1="262" x2="266" y2="272" stroke="currentColor" stroke-width="1"/>
+        <line x1="336" y1="262" x2="346" y2="272" stroke="currentColor" stroke-width="1"/>
+        <line x1="352" y1="262" x2="362" y2="272" stroke="currentColor" stroke-width="1"/>
+        <line x1="368" y1="262" x2="378" y2="272" stroke="currentColor" stroke-width="1"/>
+        <!-- módulo boca abajo -->
+        <rect x="262" y="272" width="76" height="8" fill="none" stroke="#6b3fa0" stroke-width="1.6"/>
+        <rect x="292" y="280" width="16" height="5" fill="#6b3fa0"/>
+        <!-- separación -->
+        <line x1="352" y1="285" x2="352" y2="300" stroke="#1e7d32" stroke-width="1.4"/>
+        <line x1="346" y1="285" x2="358" y2="285" stroke="#1e7d32" stroke-width="1.4"/>
+        <line x1="346" y1="300" x2="358" y2="300" stroke="#1e7d32" stroke-width="1.4"/>
+        <text x="392" y="318" text-anchor="end" font-size="12" class="tk">0.5–3 mm</text>
+        <!-- imán diametral -->
+        <rect x="288" y="300" width="12" height="9" fill="none" stroke="currentColor" stroke-width="1.4"/>
+        <rect x="300" y="300" width="12" height="9" fill="none" stroke="currentColor" stroke-width="1.4"/>
+        <text x="294" y="324" text-anchor="middle" font-size="12">N</text>
+        <text x="306" y="324" text-anchor="middle" font-size="12">S</text>
+        <!-- portaimán y perno -->
+        <path d="M280 309 L280 330 L320 330 L320 309" fill="none" stroke="#9e9e9e" stroke-width="1.6"/>
+        <rect x="284" y="330" width="32" height="12" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        <rect x="236" y="342" width="150" height="12" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        <!-- etiquetas -->
+        <line x1="236" y1="267" x2="214" y2="267" stroke="currentColor" stroke-width="0.8"/>
+        <text x="10" y="271" font-size="12">soporte fijo al cuadro (no gira)</text>
+        <line x1="262" y1="279" x2="214" y2="290" stroke="currentColor" stroke-width="0.8"/>
+        <text x="10" y="294" font-size="12" class="td">AS5600, chip hacia abajo</text>
+        <line x1="288" y1="305" x2="214" y2="312" stroke="currentColor" stroke-width="0.8"/>
+        <text x="10" y="316" font-size="12">imán diametral 6 × 2.5 mm</text>
+        <line x1="280" y1="322" x2="214" y2="334" stroke="#9e9e9e" stroke-width="0.8"/>
+        <text x="10" y="338" font-size="12" class="s">portaimán impreso (plástico)</text>
+        <line x1="284" y1="336" x2="214" y2="355" stroke="currentColor" stroke-width="0.8"/>
+        <text x="10" y="359" font-size="12">perno de la cabeza del vástago</text>
+        <line x1="236" y1="352" x2="214" y2="376" stroke="currentColor" stroke-width="0.8"/>
+        <text x="10" y="380" font-size="12">tija superior (gira)</text>
+        <text x="10" y="404" font-size="12" class="tk">eje del imán a ≤ 0.25 mm del centro del chip ✓</text>
+      </svg>
+    </div>
+    <p class="tiny sub" style="margin-top:6px">Giran con el manubrio la tija, el perno y el imán. Quedan fijos el soporte y el sensor. No hay contacto: si el sensor se rompe o se cae, la dirección sigue libre.
+    El perno de la cabeza del vástago lleva 78 N·m con fijador (manual 14-3): el portaimán se monta encima, sin aflojarlo.</p>
+  </div>
+</div>
+
+<!-- ======================================================= -->
+<h2>5 · WiFi: quién se conecta a quién</h2>
 
 <div class="cols">
   <div>
     <h3>Hoy, con el ELM327 WiFi</h3>
     <div class="esq">
       <svg viewBox="0 0 400 190" role="img" aria-label="Topología WiFi actual: el ELM327 es el punto de acceso; la Pi y el celular son clientes; solo la Pi abre el puerto 35000; el celular abre la página de la Pi en el puerto 8080">
-        <rect class="box" x="120" y="10" width="160" height="46" rx="6"/>
+        <rect class="box" x="95" y="10" width="210" height="46" rx="6"/>
         <text x="200" y="29" text-anchor="middle" font-size="13.5" font-weight="500">ELM327 (punto de acceso)</text>
         <text x="200" y="47" text-anchor="middle" font-size="12" class="s">192.168.0.10</text>
         <line x1="160" y1="56" x2="90" y2="122" stroke="#6b3fa0" stroke-width="2" stroke-dasharray="6 5"/>
         <line x1="240" y1="56" x2="310" y2="122" stroke="#6b3fa0" stroke-width="2" stroke-dasharray="6 5"/>
-        <text x="20" y="84" font-size="12" class="td">TCP 35000: solo la Pi</text>
+        <text x="10" y="80" font-size="12" class="td">TCP 35000:</text>
+        <text x="10" y="96" font-size="12" class="td">solo la Pi</text>
         <text x="282" y="84" font-size="12" class="td">solo navegador</text>
         <rect class="box" x="10" y="122" width="160" height="50" rx="6" stroke-width="2"/>
         <text x="90" y="142" text-anchor="middle" font-size="13.5" font-weight="500">Raspberry Pi</text>
@@ -725,6 +899,50 @@ sudo nmcli con up "Steren SCAN-020"</pre>
     </div>
   </div>
 
+  <div class="co co-pwr">
+    <div class="co-t">«¿Cómo se monta el sensor de dirección?»</div>
+    <div class="co-b">
+      <ul>
+        <li><b>El imán va sobre el eje de la dirección.</b> Centrado encima del perno de la cabeza del vástago, arriba de la tija superior, gira con el manubrio.
+        Se pega en un portaimán impreso que abraza la cabeza del perno. El plástico lo centra y lo aleja un poco del acero, que deforma el campo.
+        El perno no se toca: lleva 78 N·m con fijador (manual 14-3).</li>
+        <li><b>Imán diametral</b> (los polos en las caras curvas), de 6 × 2.5 mm y NdFeB, como el del datasheet. Uno axial, con los polos en las caras planas,
+        no sirve: su campo es igual en todos los ángulos y no hay nada que medir.</li>
+        <li><b>El sensor, fijo al cuadro</b> en un soporte, con el chip hacia abajo. Según el datasheet de ams, la separación típica es de 0.5 a 3 mm (depende del imán)
+        y el eje del imán puede quedar a máximo 0.25 mm del centro del chip con un imán de 6 mm. Afina la altura con el AGC.</li>
+        <li><b>De tope a tope, con la moto en el soporte:</b> gira despacio todo a la izquierda y todo a la derecha y revisa cuatro cosas.
+        Que el imán no toque el sensor en ningún punto (pasa una hoja de papel por el hueco). Que el soporte no roce la llave ni el llavero, los semimanubrios,
+        los chicotes, las mangueras del freno ni el arnés. Que el cable del sensor tenga holgura y no se estire ni se pellizque en los topes.
+        Y que el tablero marque un ángulo continuo, sin «sin imán» ni brincos. Los topes de la dirección deben ser los de la moto, nunca el soporte.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="co co-ok">
+    <div class="co-t">«¿Por qué no un servo como encoder?»</div>
+    <div class="co-b">
+      <p>Un servo tiene que ir acoplado a la dirección con engranes o una banda, o sea, una pieza mecánica unida al manubrio. Si algo se traba ahí
+      (un engrane que se barre, un soporte que se dobla, una piedra), <b>traba la dirección</b>. El AS5600 no toca nada: lee el imán a un par de milímetros
+      y, si se rompe, el manubrio sigue libre.</p>
+      <p style="margin:0">El otro problema es el juego. El de los engranes de un servo ronda 1°, y a velocidad el manubrio se corrige apenas unos grados:
+      el juego se come justo lo que quieres ver y se vuelve una zona muerta cada vez que cambias de sentido. El AS5600 da 12 bits (0.088° por paso).
+      Su error de linealidad llega a ±1° en la vuelta completa (datasheet), pero es suave, se repite igual y no tiene zona muerta. Después de «Fijar centro» se mide alrededor de 0°.</p>
+    </div>
+  </div>
+
+  <div class="co co-bad">
+    <div class="co-t">«¿Y si la Pi tiene que ir lejos del manubrio?»</div>
+    <div class="co-b">
+      <p>No alargues el I²C. Es un bus pensado para una sola tarjeta: con un metro de cable junto a las bobinas de encendido, el cable redondea las orillas de la señal
+      y el ruido mete bits falsos. Se ve como «sin sensor» de vez en cuando o como brincos en el ángulo.</p>
+      <ul style="margin:0">
+        <li><b>Lo correcto:</b> llevar la Pi al frente, donde ya van la pantalla, los botones y el sensor, con un cable de menos de 50 cm, trenzado.</li>
+        <li><b>Si de plano no cabe:</b> un par de extensores I²C diferenciales (NXP PCA9615; SparkFun los vende como QwiicBus) con cable de par trenzado,
+        o un microcontrolador junto al sensor que mande el ángulo por un enlace robusto. Las dos opciones agregan piezas o software; mover la Pi no.</li>
+      </ul>
+    </div>
+  </div>
+
   <div class="co co-bad">
     <div class="co-t">«¿Qué pasa si algo se suelta a media rodada?»</div>
     <div class="co-b">
@@ -735,6 +953,8 @@ sudo nmcli con up "Steren SCAN-020"</pre>
         <li><b>El cable de un botón se pela y toca el chasis:</b> se lee «presionado» todo el tiempo. Lo más probable es que en Python la vista avance sola por la repetición de tecla.
         En C++ no pasa, porque raylib usa <code>IsKeyPressed</code>.</li>
         <li><b>El cable de un botón toca 12 V:</b> se muere el GPIO, o la Pi. Para eso es el 1 kΩ en serie, y por eso el cable va lejos de los cables de 12 V.</li>
+        <li><b>Se zafa el cable del AS5600:</b> el software marca «sin sensor», DIRECCIÓN queda sin dato y reintenta cada 2 s. Lo demás sigue leyendo.</li>
+        <li><b>Se mueve o se cae el imán:</b> el chip deja de verlo y el tablero dice «sin imán». No marca un ángulo falso.</li>
         <li><b>Corto en la alimentación de la Pi:</b> se funde su fusible de 5 A, no el de la ECU. La moto sigue andando.</li>
       </ul>
     </div>
@@ -743,7 +963,7 @@ sudo nmcli con up "Steren SCAN-020"</pre>
 </div>
 
 <!-- ======================================================= -->
-<h2 id="prueba">5 · Prueba de 5 minutos en la moto, antes de comprar la interfaz</h2>
+<h2 id="prueba">6 · Prueba de 5 minutos en la moto, antes de comprar la interfaz</h2>
 
 <div class="cols">
   <div>
@@ -793,7 +1013,7 @@ EOF</pre>
 </div>
 
 <!-- ======================================================= -->
-<h2>6 · Qué comprar, en orden</h2>
+<h2>7 · Qué comprar, en orden</h2>
 
 <div class="tabla">
   <table>
@@ -814,17 +1034,29 @@ EOF</pre>
       <td>Los Schurter son IP67 certificados. Del mo.switch mini solo encontré «a prueba de salpicaduras», no IP67. <span class="pend">por confirmar</span> el diámetro del manubrio con un vernier.</td></tr>
     <tr><td>8</td><td>Pantalla legible al sol</td><td>Newhaven NHD-5.0-HDMI-N-RSXP-CTU (5″, <b>900 nits</b>, US$89.20). Si cabe una de 7″: NHD-7.0-HDMI-N-RSXN (<b>1000 nits</b> típ., 800 mín., US$98.36)</td>
       <td>HDMI, 800 × 480, de −20 a 70 °C, se alimenta con 5–7 V (la de 7″ gasta 0.73 A a 5 V). La de 5″ mide 136 × 76 × 18 mm. Más un cable micro-HDMI → HDMI corto.</td></tr>
-    <tr><td>9</td><td>Montaje de la pantalla</td><td>RAM Mounts RAM-B-176U</td><td>Base que entra en el hueco del vástago de la dirección (12–38 mm), con bola de 1″, hasta 2 lb. La pantalla se fija con una base impresa.
-      <span class="pend">por confirmar</span> el hueco del vástago de tu moto.</td></tr>
-    <tr><td>10</td><td>Caja de la Pi</td><td>Hammond 1554N2GYSL (IP68, 119 × 119 × 61 mm)</td><td>Cabe la Pi 4 (85 × 56 mm) con el convertidor. <span class="pend">por confirmar</span> que quepa bajo el asiento.</td></tr>
+    <tr><td>9</td><td>Montaje de la pantalla</td><td>RAM Mounts RAM-B-408-75-1U (base para tubo de 3/4″ a 1″, bola de 1″) + brazo RAM de bola B</td>
+      <td>Se abraza al semimanubrio de 22 mm. La pantalla se fija con una base impresa. Las bases RAM que entran en el vástago no sirven aquí:
+      esta moto tiene un perno en la cabeza del vástago, no un tubo hueco (manual 14-2/14-3), y ese punto es para el imán del sensor.
+      <span class="pend">por confirmar</span> que quepa entre la tija y el puño.</td></tr>
+    <tr><td>10</td><td>Caja de la Pi</td><td>Hammond 1554N2GYSL (IP68, 119 × 119 × 61 mm)</td><td>Cabe la Pi 4 (85 × 56 mm) con el convertidor. Va al frente, junto al tablero.
+      <span class="pend">por confirmar</span> que quepa detrás del tablero o del carenado.</td></tr>
+    <tr><td>11</td><td>Sensor de dirección</td><td>Módulo con el chip <b>ams AS5600</b>, de cualquier marca, que tenga el pin DIR</td>
+      <td>12 bits, I²C en 0x36, lo que espera el software. Que diga que funciona a 3.3 V (con VDD5V y VDD3V3 unidos). El Grove de Seeed dice 3.3 V / 5 V
+      pero solo saca 4 pines: confirma que tenga DIR a tierra antes de elegirlo.</td></tr>
+    <tr><td>12</td><td>Imán</td><td>Diametral, 6 × 2.5 mm, NdFeB N35 o mejor (muchos módulos lo traen). Alternativa: K&amp;J Magnetics D42DIA-N52 (6.35 × 3.18 mm, diametral)</td>
+      <td>Es el tamaño de referencia del datasheet. El N42 de K&amp;J aguanta hasta 80 °C; la cabeza de la dirección al sol no debería pasar de ahí, pero mídelo.</td></tr>
+    <tr><td>13</td><td>Soporte y portaimán</td><td>Impresos en tu Bambu, en PETG o ASA</td><td>El soporte va fijo al cuadro, sobre el perno, y el portaimán abraza la cabeza del perno.
+      PLA no: se ablanda con el sol y el calor del motor. El cable del sensor es de 4 hilos en dos pares trenzados, de menos de 50 cm.</td></tr>
     <tr class="grupo"><td colspan="4">Elige una forma de apagar</td></tr>
-    <tr><td>11a</td><td>Apagado seguro</td><td>TJD CarPiHAT (para Pi 4). £73 en The Pi Hut, agotada al 2026-10-01; también se vende en Tindie</td>
+    <tr><td>14a</td><td>Apagado seguro</td><td>TJD CarPiHAT (para Pi 4). £73 en The Pi Hut, agotada al 2026-10-01; también se vende en Tindie</td>
       <td>Detecta la llave por BCM12, mantiene su propia corriente con BCM25, apaga la Pi y luego se corta (&lt; 1 mA apagada). Trae su convertidor de 12 → 5 V.
-      <b>Ojo: ocupa GPIO17 (entrada IN_2) y GPIO27 (salida OUT_0).</b> Con ella, los botones pasan a GPIO19 y GPIO26 (pines 35 y 37, GND en el 39, también consecutivos).
+      <b>Ojo: ocupa GPIO17 (entrada IN_2) y GPIO27 (salida OUT_0) y tapa el header.</b> Con ella, los botones pasan a GPIO19 y GPIO26 (pines 35 y 37, GND en el 39, también consecutivos),
+      y el AS5600 va al I²C que la HAT saca aparte (lo comparte con su reloj; <span class="pend">por confirmar</span> que su dirección no sea 0x36).
       Necesita 12 V permanentes de la batería con su propio fusible, además de la señal de llave. Su guía pide ventilador arriba de 1.5 A.</td></tr>
-    <tr><td>11b</td><td>Sin comprar</td><td>Overlay File System + base en una USB</td><td>Es gratis. Cortar la corriente ya no daña el sistema, pero todo lo que no esté en la USB se pierde en cada arranque.</td></tr>
+    <tr><td>14b</td><td>Sin comprar</td><td>Overlay File System + base en una USB</td><td>Es gratis. Cortar la corriente ya no daña el sistema, pero todo lo que no esté en la USB se pierde en cada arranque.
+      La calibración de la dirección (<code>direccion.json</code>) se guarda junto a la base, así que también tiene que vivir en la USB.</td></tr>
     <tr class="grupo"><td colspan="4">Condicional: después de la prueba de 5 minutos</td></tr>
-    <tr><td>12</td><td>Interfaz de diagnóstico</td><td><b>OBDLink EX</b> (USB), US$69.95</td><td>La recomiendo si el Steren contesta «?» a <code>ATWM</code>/<code>ATFI</code> o no logra BUS INIT, y también si falla lo del WiFi.
+    <tr><td>15</td><td>Interfaz de diagnóstico</td><td><b>OBDLink EX</b> (USB), US$69.95</td><td>La recomiendo si el Steren contesta «?» a <code>ATWM</code>/<code>ATFI</code> o no logra BUS INIT, y también si falla lo del WiFi.
       Usa el chip STN2232, maneja ISO 14230-4 (KWP2000), su manual dice que <code>ATFI</code> y <code>ATWM</code> están soportados,
       trabaja de 8 a 30 V con 6.5 mA y de −20 a 55 °C. En la Pi aparece como puerto serie (chip FTDI).
       Es USB y no Bluetooth: no hay que emparejar nada y libera el WiFi de la Pi.</td></tr>
@@ -840,7 +1072,9 @@ EOF</pre>
     <li><b>Juice4halt.</b> Su hoja de datos lo limita a 1 A promedio y lo hizo para Pi B+, 2 y 3. Se queda corto para una Pi 4.</li>
     <li><b>Mausberry «4amp Car Supply».</b> Su entrada máxima es de 18 V, sin margen para picos, y está agotado.</li>
     <li><b>Cable KKL (FTDI).</b> Funciona solo si decides programar KWP2000 tú mismo. El chip STN ya lo hace.</li>
-    <li><b>Pantallas SPI de 3.5″ que se montan sobre el header.</b> La Waveshare (A) usa el pin 11 (GPIO17) para el táctil y tapa el 13.</li>
+    <li><b>Pantallas SPI de 3.5″ que se montan sobre el header.</b> La Waveshare (A) usa el pin 11 (GPIO17) para el táctil y tapa el 13 y el I²C.</li>
+    <li><b>Bases RAM de vástago</b> (RAM-B-176U y similares). Necesitan un vástago hueco de 12–38 mm; esta moto tiene un perno, y ese punto es para el imán.</li>
+    <li><b>Un servo como encoder de la dirección.</b> Ver la duda «¿Por qué no un servo como encoder?».</li>
   </ul>
 </div>
 
@@ -853,16 +1087,25 @@ EOF</pre>
   <li><b>Si la ECU contesta el modo 01 y si tu Steren acepta el inicio KDS:</b> con la prueba de 5 minutos.</li>
   <li><b>El modelo exacto de tu Steren</b> (¿SCAN-020?), el nombre de la red, cuántos clientes acepta y si pasa tráfico entre ellos: mira la etiqueta y prueba abrir <code>:8080</code> desde el celular.</li>
   <li><b>El tipo de fusible y qué circuito está muerto con la llave en OFF:</b> abre la caja (p. 587) y mide. Que no sea el de la ECU ni el de encendido.</li>
-  <li><b>El diámetro del manubrio y el hueco del vástago:</b> con un vernier.</li>
-  <li><b>Espacio y temperatura bajo el asiento:</b> la ficha de la Pi 4 la especifica para 0–50 °C. Mide un día de calor con el motor caliente.</li>
+  <li><b>El diámetro del semimanubrio:</b> con un vernier (22 mm esperado), y que la base RAM quepa entre la tija y el puño.</li>
+  <li><b>Espacio y temperatura al frente, detrás del tablero:</b> la ficha de la Pi 4 la especifica para 0–50 °C. Mide un día de calor con el motor caliente.</li>
   <li><b>La pantalla elegida:</b> cuánto consume y si se alimenta del mismo convertidor.</li>
+  <li><b>El módulo AS5600 que compres:</b> el orden de sus pines (serigrafía), que tenga DIR, y que a 3.3 V tenga VDD5V y VDD3V3 unidos (puente o resistencia de 0 Ω).</li>
+  <li><b>El soporte del sensor:</b> AGC cerca de 64, sin roces de tope a tope y sin «sin imán» en todo el recorrido. Que el portaimán no toque la llave en ningún ángulo.</li>
 </ol>
 
 <h2>Fuentes</h2>
 <ul class="fuentes">
   <li><b>Tu manual de servicio</b>, Ninja ZX-6R / ZX-6R ABS 636 (ZX636ED/FD, 2013), <code>~/Downloads/NinjaManual.pdf</code>: pines de la ECU pp. 104–105;
   ubicación del KDS p. 107 [B]; tapa del conector p. 558; circuito del inmovilizador/KDS p. 578; alimentación de la ECU con llave OFF/ON p. 130;
-  circuito de alimentación, batería 12 V 8 Ah y fusibles p. 131; voltaje de carga 14.3–14.7 V p. 494; cajas de fusibles p. 587; KDS Ver.3 p. 599; conectores bajo el asiento p. 701.</li>
+  circuito de alimentación, batería 12 V 8 Ah y fusibles p. 131; voltaje de carga 14.3–14.7 V p. 494; cajas de fusibles p. 587; KDS Ver.3 p. 599; conectores bajo el asiento p. 701;
+  dirección y perno de la cabeza del vástago (78 N·m, con fijador) pp. 448–449 (14-2, 14-3).</li>
+  <li>AS5600: <a href="https://files.seeedstudio.com/wiki/Grove-12-bit-Magnetic-Rotary-Position-Sensor-AS5600/res/Magnetic%20Rotary%20Position%20Sensor%20AS5600%20Datasheet.pdf">datasheet de ams v1-06</a>
+  (separación típica 0.5–3 mm, desplazamiento máximo de 0.25 mm con imán de 6 mm, Bz de 30–90 mT, DIR, 0x36, STATUS/AGC con rango 0–128 a 3.3 V, VDD5V y VDD3V3 unidos a 3.3 V, 12 bits, INL ±1°);
+  <a href="https://wiki.seeedstudio.com/Grove-12-bit-Magnetic-Rotary-Position-Sensor-AS5600/">Grove AS5600 de Seeed</a>;
+  <a href="https://www.kjmagnetics.com/d42dia-n52-neodymium-diametric-disc-magnet">K&amp;J D42DIA-N52</a> y <a href="https://www.kjmagnetics.com/d42dia-neodymium-diametric-disc-magnet">D42DIA</a> (80 °C máx.);
+  <a href="https://learn.sparkfun.com/tutorials/sparkfun-qwiicbus-hookup-guide/">SparkFun QwiicBus (PCA9615)</a>; <a href="https://rammount.com/products/ram-b-408-75-1u">RAM-B-408-75-1U</a>.
+  Repo: <code>python/analizador.py</code> (bus 1, 0x36, 25 lecturas/s, <code>direccion.json</code>) y <code>web/index.html</code> (Fijar centro, Invertir).</li>
   <li>Protocolo KDS (0x11/0xF1, inicio rápido, servicio 21, tiempos de ISO 14230-2): <a href="https://github.com/tomnz/kawaduino">Kawaduino</a>;
   <a href="https://github.com/HerrRiebmann/KDS2Bluetooth">KDS2Bluetooth</a>, con una foto del pinout del KDS en otra Kawasaki que marca «+12V SWITCHED».</li>
   <li>Foro de RaceChrono (archivo): <a href="http://web.archive.org/web/20251113123653/http://racechrono.com/forum/discussion/2108/elm327-connection-help-pid-needed-ducati-kawasaki-triumph-and-honda">hilo 2108</a> (receta de inicio; los clones no la aceptan; OBD2 hasta Euro 5);
@@ -891,7 +1134,7 @@ EOF</pre>
   <a href="https://juice4halt.com/wp-content/uploads/2017/11/datasheet20-5V.pdf">Juice4halt</a>; <a href="https://www.mausberrycircuits.com/collections/frontpage/products/4amp-car-supply-switch">Mausberry</a>.</li>
   <li>Pantallas Newhaven <a href="https://newhavendisplay.com/5-0-inch-ips-capacitive-hdmi-tft-module/">5″</a> y <a href="https://newhavendisplay.com/7-0-inch-sunlight-readable-hdmi-tft-module-without-touchscreen/">7″</a>;
   <a href="https://www.motogadget.com/en-us/products/mo-switch-mini">mo.switch mini</a>; <a href="https://www.mouser.com/catalog/specsheets/schurter_typ_msm_16.pdf">Schurter MSM 16</a>;
-  <a href="https://rammount.com/products/ram-b-176u">RAM-B-176U</a>; <a href="https://www.hammfg.com/electronics/small-case/plastic/1554">Hammond 1554</a>;
+  <a href="https://rammount.com/products/ram-b-176u">RAM-B-176U</a> (pide un vástago hueco de 12–38 mm); <a href="https://www.hammfg.com/electronics/small-case/plastic/1554">Hammond 1554</a>;
   <a href="https://www.waveshare.com/wiki/3.5inch_RPi_LCD_(A)">Waveshare 3.5″ (A)</a>.</li>
   <li>Repo: <code>python/analizador.py</code> (192.168.0.10:35000, :8080, <code>ATSP0</code>, PIDs, <code>BTN_*_GPIO</code>, teclas), <code>README.md</code> (overlay gpio-key) y
   <code>~/Desktop/membrane-rig/INVENTORY.md</code> (pines 6 y 14 dañados en la Pi 4 de reemplazo).</li>

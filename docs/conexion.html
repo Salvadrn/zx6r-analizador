@@ -1043,8 +1043,9 @@ EOF</pre>
     <tr><td>11</td><td>Sensor de dirección</td><td>Módulo con el chip <b>ams AS5600</b>, de cualquier marca, que tenga el pin DIR</td>
       <td>12 bits, I²C en 0x36, lo que espera el software. Que diga que funciona a 3.3 V (con VDD5V y VDD3V3 unidos). El Grove de Seeed dice 3.3 V / 5 V
       pero solo saca 4 pines: confirma que tenga DIR a tierra antes de elegirlo.</td></tr>
-    <tr><td>12</td><td>Imán</td><td>Diametral, 6 × 2.5 mm, NdFeB N35 o mejor (muchos módulos lo traen). Alternativa: K&amp;J Magnetics D42DIA-N52 (6.35 × 3.18 mm, diametral)</td>
-      <td>Es el tamaño de referencia del datasheet. El N42 de K&amp;J aguanta hasta 80 °C; la cabeza de la dirección al sol no debería pasar de ahí, pero mídelo.</td></tr>
+    <tr><td>12</td><td>Imán</td><td>Diametral, 6 × 2.5 mm, NdFeB N35 o mejor (muchos módulos lo traen). Alternativa: K&amp;J Magnetics D42DIA (N42) o D42DIA-N52, de 6.35 × 3.18 mm y diametrales</td>
+      <td>Es el tamaño de referencia del datasheet. K&amp;J especifica el D42DIA (N42) para un máximo de 80 °C; del N52 no verifiqué el límite.
+      La cabeza de la dirección al sol no debería llegar a 80 °C, pero mídelo.</td></tr>
     <tr><td>13</td><td>Soporte y portaimán</td><td>Impresos en tu Bambu, en PETG o ASA</td><td>El soporte va fijo al cuadro, sobre el perno, y el portaimán abraza la cabeza del perno.
       PLA no: se ablanda con el sol y el calor del motor. El cable del sensor es de 4 hilos en dos pares trenzados, de menos de 50 cm.</td></tr>
     <tr class="grupo"><td colspan="4">Elige una forma de apagar</td></tr>

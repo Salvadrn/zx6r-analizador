@@ -14,10 +14,12 @@
 
 class Telemetry;
 class Store;
+class Steering;
 
 class WebServer {
 public:
-    WebServer(const Config& cfg, const Telemetry& tel, const Store& store) : cfg_(cfg), tel_(tel), store_(store) {}
+    WebServer(const Config& cfg, const Telemetry& tel, const Store& store, Steering& steer)
+        : cfg_(cfg), tel_(tel), store_(store), steer_(steer) {}
     ~WebServer() { stop(); }
     WebServer(const WebServer&) = delete;
     WebServer& operator=(const WebServer&) = delete;
@@ -38,10 +40,12 @@ private:
     std::string sessions_json() const;
     bool session_json(int id, std::string& out) const;
     void session_csv(int fd, int id) const;
+    std::string steer_json(bool ok) const;
 
     const Config& cfg_;
     const Telemetry& tel_;
     const Store& store_;
+    Steering& steer_;
     int listen_fd_ = -1;
     std::atomic<bool> listening_{false};
     std::atomic<bool> stop_{false};

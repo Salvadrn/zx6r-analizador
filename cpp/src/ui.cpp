@@ -797,9 +797,13 @@ bool Dash::run(const std::atomic<bool>& quit) {
     bool done = false;
     while (!done && !WindowShouldClose() && !quit) {
         // botones del manubrio = teclas (HID/Bluetooth, o gpio-key en la Pi)
-        if (key_pressed({KEY_RIGHT, KEY_SPACE, KEY_ENTER, KEY_KP_ENTER, KEY_PAGE_DOWN, KEY_DOWN, KEY_N}))
-            vi_ = (vi_ + 1) % nviews;
-        if (key_pressed({KEY_LEFT, KEY_BACKSPACE, KEY_PAGE_UP, KEY_UP, KEY_P})) vi_ = (vi_ + nviews - 1) % nviews;
+        if (snapshot) {
+            vi_ = static_cast<int>(shot);   // capturas en orden aunque llegue una tecla a la ventana
+        } else {
+            if (key_pressed({KEY_RIGHT, KEY_SPACE, KEY_ENTER, KEY_KP_ENTER, KEY_PAGE_DOWN, KEY_DOWN, KEY_N}))
+                vi_ = (vi_ + 1) % nviews;
+            if (key_pressed({KEY_LEFT, KEY_BACKSPACE, KEY_PAGE_UP, KEY_UP, KEY_P})) vi_ = (vi_ + nviews - 1) % nviews;
+        }
 
         W_ = static_cast<float>(GetScreenWidth());
         H_ = static_cast<float>(GetScreenHeight());
@@ -835,8 +839,7 @@ bool Dash::run(const std::atomic<bool>& quit) {
             std::fflush(stdout);
             ++shot;
             next_shot += 1.5;
-            if (shot >= views_.size()) done = true;
-            else vi_ = static_cast<int>(shot);
+            done = shot >= views_.size();
         }
         EndDrawing();
 

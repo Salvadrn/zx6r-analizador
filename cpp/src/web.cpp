@@ -1,6 +1,7 @@
 #include "web.hpp"
 
 #include "obd.hpp"
+#include "steer.hpp"
 #include "store.hpp"
 #include "web_index.hpp"   // generado por CMake desde web/index.html
 
@@ -90,6 +91,7 @@ void jmeta_open(std::string& o, const Sensor& s) {
     if (s.crit) o += ",\"crit\":" + fmt_num(*s.crit, 4);
     if (s.warn_lo) o += ",\"warn_lo\":" + fmt_num(*s.warn_lo, 4);
     if (s.crit_lo) o += ",\"crit_lo\":" + fmt_num(*s.crit_lo, 4);
+    if (std::strcmp(s.id, "steer") == 0) o += ",\"calibrable\":true";   // el visor muestra los botones
 }
 
 // ── HTTP ──
@@ -292,13 +294,21 @@ void WebServer::handle(int fd) {
     }
     const std::string method = line.substr(0, sp1);
     const std::string target = line.substr(sp1 + 1, sp2 == std::string::npos ? std::string::npos : sp2 - sp1 - 1);
-    if (method != "GET") {
-        reply(fd, 405, TEXT_PLAIN, std::string("solo GET"), "Allow: GET\r\n");
-        return;
-    }
     const std::size_t q = target.find('?');
     const std::string path = target.substr(0, q);
     const std::string query = q == std::string::npos ? "" : target.substr(q + 1);
+
+    // Calibración de la dirección desde el celular (el cuerpo de la petición no se usa)
+    if (method == "POST") {
+        if (path == "/api/steer/center") reply(fd, 200, JSON, steer_json(steer_.set_center()));
+        else if (path == "/api/steer/invert") reply(fd, 200, JSON, steer_json(steer_.toggle_invert()));
+        else not_found(fd);
+        return;
+    }
+    if (method != "GET") {
+        reply(fd, 405, TEXT_PLAIN, std::string("solo GET y POST"), "Allow: GET, POST\r\n");
+        return;
+    }
 
     if (path == "/" || path == "/index.html") {
         reply(fd, 200, "text/html; charset=utf-8", kIndexHtml, sizeof kIndexHtml - 1);
@@ -367,8 +377,19 @@ std::string WebServer::live_json(double trace_s) const {
         o += ':';
         jseries(o, s.sensors[i].t, s.sensors[i].v);
     }
-    o += "}}";
+    const SteerStatus st = steer_.status();
+    o += "},\"steer\":{\"status\":";
+    jstr(o, st.status);
+    o += std::string(",\"calibrated\":") + (st.calibrated ? "true" : "false");
+    o += std::string(",\"invert\":") + (st.invert ? "true" : "false") + "}}";
     return o;
+}
+
+// {"ok":bool,"calibrated":bool,"invert":bool}
+std::string WebServer::steer_json(bool ok) const {
+    const SteerStatus st = steer_.status();
+    return std::string("{\"ok\":") + (ok ? "true" : "false") + ",\"calibrated\":" + (st.calibrated ? "true" : "false") +
+           ",\"invert\":" + (st.invert ? "true" : "false") + "}";
 }
 
 std::string WebServer::sessions_json() const {

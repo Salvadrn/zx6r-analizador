@@ -134,7 +134,9 @@ void reply(int fd, int code, const char* ctype, const std::string& body, const c
     reply(fd, code, ctype, body.data(), body.size(), extra);
 }
 
-void not_found(int fd) { reply(fd, 404, JSON, std::string("{\"error\":\"no encontrado\"}")); }
+const char* const TEXT_PLAIN = "text/plain; charset=utf-8";
+
+void not_found(int fd, const char* what = "no encontrado") { reply(fd, 404, TEXT_PLAIN, std::string(what)); }
 
 bool parse_id(const std::string& s, int& id) {
     if (s.empty() || s.size() > 9) return false;
@@ -285,13 +287,13 @@ void WebServer::handle(int fd) {
     const std::size_t sp1 = line.find(' ');
     const std::size_t sp2 = sp1 == std::string::npos ? std::string::npos : line.find(' ', sp1 + 1);
     if (sp1 == std::string::npos) {
-        reply(fd, 400, JSON, std::string("{\"error\":\"petición inválida\"}"));
+        reply(fd, 400, TEXT_PLAIN, std::string("petición inválida"));
         return;
     }
     const std::string method = line.substr(0, sp1);
     const std::string target = line.substr(sp1 + 1, sp2 == std::string::npos ? std::string::npos : sp2 - sp1 - 1);
     if (method != "GET") {
-        reply(fd, 405, JSON, std::string("{\"error\":\"solo GET\"}"), "Allow: GET\r\n");
+        reply(fd, 405, TEXT_PLAIN, std::string("solo GET"), "Allow: GET\r\n");
         return;
     }
     const std::size_t q = target.find('?');
@@ -313,7 +315,7 @@ void WebServer::handle(int fd) {
         if (!parse_id(rest, id)) not_found(fd);
         else if (csv) session_csv(fd, id);
         else if (session_json(id, body)) reply(fd, 200, JSON, body);
-        else not_found(fd);
+        else not_found(fd, "no existe");
     } else {
         not_found(fd);
     }
@@ -423,17 +425,17 @@ void WebServer::session_csv(int fd, int id) const {
         ok = ok && send_all(fd, chunk);
         return ok;
     });
-    if (!exists) not_found(fd);
+    if (!exists) not_found(fd, "no existe");
 }
 
 std::string WebServer::local_ip(const std::string& toward) {
     sockaddr_in to{};
     to.sin_family = AF_INET;
-    to.sin_port = htons(9);
-    if (::inet_pton(AF_INET, toward.c_str(), &to.sin_addr) != 1) return "";
+    to.sin_port = htons(1);
+    if (::inet_pton(AF_INET, toward.c_str(), &to.sin_addr) != 1) return "127.0.0.1";
     const int fd = ::socket(AF_INET, SOCK_DGRAM, 0);
-    if (fd < 0) return "";
-    std::string ip;
+    if (fd < 0) return "127.0.0.1";
+    std::string ip = "127.0.0.1";   // sin red hacia el ELM327
     sockaddr_in me{};
     socklen_t len = sizeof me;
     if (::connect(fd, reinterpret_cast<sockaddr*>(&to), sizeof to) == 0 &&

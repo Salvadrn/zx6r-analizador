@@ -567,14 +567,16 @@ def _as5600_read(fd):
 def steer_thread(stop, t0):
     """Lee la dirección 25 veces por segundo, en su propio hilo para no esperar al ELM327."""
     fd = None
+    next_at = time.time()
     try:
         while not stop.is_set():
+            next_at += 1 / STEER_HZ
             t = time.time() - t0
             if MODO_SIMULADOR:
                 raw = (200 + 9 * math.sin(t * 0.5) + 2.5 * math.sin(t * 2.3)) % 360
                 steer_state.update(status="sim", raw=raw)
                 _record("steer", t, _steer_angle(raw))
-                stop.wait(1 / STEER_HZ)
+                stop.wait(max(0.0, next_at - time.time()))
                 continue
             try:
                 if fd is None:
@@ -588,7 +590,7 @@ def steer_thread(stop, t0):
                 else:
                     steer_state.update(status="sin_iman")
                     _record("steer", t, None)
-                stop.wait(1 / STEER_HZ)
+                stop.wait(max(0.0, next_at - time.time()))
             except (OSError, ImportError):            # sin bus I²C o sin AS5600: reintenta
                 steer_state.update(status="sin_sensor")
                 _record("steer", t, None)
@@ -596,6 +598,7 @@ def steer_thread(stop, t0):
                     os.close(fd)
                     fd = None
                 stop.wait(RETRY_S)
+                next_at = time.time()
     finally:
         if fd is not None:
             os.close(fd)
@@ -1039,11 +1042,13 @@ class Dash:
         py0, py1 = y + S(16), y + h - S(16)
         c.create_rectangle(px0, py0, px1, py1, fill=PLOT, outline=BORDER)
         rng = s["y_max"] - s["y_min"]
+        special = []                                   # y de umbrales y referencias, para no tapar una con un rótulo
         for lim, tint in ((s.get("warn"), WARN), (s.get("crit"), CRIT),      # umbrales
                           (s.get("warn_lo"), WARN), (s.get("crit_lo"), CRIT)):
             if lim is not None and s["y_min"] < lim < s["y_max"]:
                 ty = _ymap(s, py0, py1, lim)
                 c.create_line(px0, ty, px1, ty, fill=tint, dash=(2, 6))
+                special.append(ty)
         for t in ticks[1:]:
             gx = px1 - t / window * (px1 - px0)
             c.create_line(gx, py0, gx, py1, fill=GRID)
@@ -1053,13 +1058,16 @@ class Dash:
             c.create_line(px0, gy, px1, gy, fill=GRID)
             c.create_text(px0 - S(8), gy, anchor="e", fill=TEXT3, font=self.f("mono", S(11)),
                           text=_axis_label(gv, rng / 4))
+        refs = [(rv, text, line_c, text_c) for rv, text, line_c, text_c in REFS.get(s["id"], [])
+                if s["y_min"] < rv < s["y_max"]]
+        special += [_ymap(s, py0, py1, rv) for rv, *_ in refs]
         labels = []
-        for rv, text, line_c, text_c in REFS.get(s["id"], []):
-            if s["y_min"] < rv < s["y_max"]:
-                ry = _ymap(s, py0, py1, rv)
-                c.create_line(px0, ry, px1, ry, fill=line_c, dash=(5, 5))
-                ly = ry - S(9) if ry - S(9) > py0 + S(26) else ry + S(10)
-                labels.append((ly, text, text_c))
+        for rv, text, line_c, text_c in refs:
+            ry = _ymap(s, py0, py1, rv)
+            c.create_line(px0, ry, px1, ry, fill=line_c, dash=(5, 5))
+            crowded = any(ry - S(22) < oy < ry for oy in special)   # otra línea justo arriba
+            ly = ry - S(9) if ry - S(9) > py0 + S(26) and not crowded else ry + S(10)
+            labels.append((ly, text, text_c))
 
         # items que se mueven: línea, punto y mensaje
         line = c.create_line(0, 0, 0, 0, fill=TEXT, width=max(2, S(2)), state="hidden")
@@ -1069,9 +1077,10 @@ class Dash:
             t_id = c.create_text(px1 - S(10), ly, anchor="e", text=text, fill=text_c, font=self.f("sans", S(11)))
             x0, y0b, x1, y1b = c.bbox(t_id)
             c.tag_lower(c.create_rectangle(x0 - S(4), y0b, x1 + S(2), y1b, fill=PLOT, outline=""), t_id)
+        msg_bg = c.create_rectangle(0, 0, 0, 0, fill=PLOT, outline="", state="hidden")   # que no lo tache una línea
         msg = c.create_text((px0 + px1) / 2, (py0 + py1) / 2, text="", fill=STALE, font=self.f("sans", S(15), True))
         self.dyn.append((self._upd_graph, {"s": s, "val": val, "line": line, "dot": dot,
-                                           "msg": msg, "stats": stats, "r": r, "window": window,
+                                           "msg": msg, "msg_bg": msg_bg, "stats": stats, "r": r, "window": window,
                                            "box": (px0, py0, px1, py1)}))
 
     # ── actualización por cuadro ────────────────
@@ -1170,7 +1179,14 @@ class Dash:
             msg, mc = f"SIN SEÑAL · hace {now - sd['t'][-1]:.0f} s", WARN
         else:
             msg, mc = "", STALE
-        self._set(d["msg"], text=msg, fill=mc)
+        if msg != self._cache.get(d["msg"], {}).get("text"):
+            self._set(d["msg"], text=msg, fill=mc)
+            if msg:
+                x0, y0, x1, y1 = self.c.bbox(d["msg"])
+                self.c.coords(d["msg_bg"], x0 - self.S(10), y0 - self.S(4), x1 + self.S(10), y1 + self.S(4))
+            self._set(d["msg_bg"], state="normal" if msg else "hidden")
+        else:
+            self._set(d["msg"], fill=mc)
 
         if d["stats"]:
             st = d["stats"]

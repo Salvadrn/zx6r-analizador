@@ -39,6 +39,7 @@ tr.s:hover td{background:#0b0b0b}
 .btn{color:var(--t);background:none;border:1px solid var(--line);border-radius:8px;padding:7px 12px;font:inherit;font-size:13px;text-decoration:none;cursor:pointer}
 .right{margin-left:auto}
 .scroll{overflow-x:auto}
+.cal{margin:10px 0 0}
 .nowrap{white-space:nowrap}
 @media (max-width:480px){.wide{display:none}.val{font-size:38px}}
 </style>
@@ -56,6 +57,14 @@ const $ = id => document.getElementById(id);
 const COL = {grid: "#161616", text: "#f0f0f0", t3: "#666", stale: "#444", ok: "#6fb583", warn: "#d6a24a", crit: "#d65c57"};
 const STATES = {sim: ["SIMULADOR", COL.warn], live: ["OBD2 EN VIVO", COL.ok], connecting: ["CONECTANDO", COL.warn], lost: ["SIN CONEXIÓN", COL.crit]};
 const fmt = (m, v) => v == null ? "--" : Number(v).toFixed(m.dec);
+const STEER = {ok: "", sim: "simulador", init: "iniciando", sin_sensor: "sin sensor AS5600", sin_iman: "sin imán"};
+function steerText(st) {
+  if (!st) return "";
+  const parts = [STEER[st.status] ?? st.status];
+  if (st.status === "ok" || st.status === "sim") parts.push(st.calibrated ? "calibrada" : "sin calibrar");
+  if (st.invert) parts.push("invertida");
+  return parts.filter(Boolean).join(" · ");
+}
 const clock = s => {
   s = Math.max(0, Math.round(s));
   const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), ss = String(s % 60).padStart(2, "0");
@@ -114,10 +123,19 @@ async function live() {
         const el = document.createElement("div");
         el.className = "card";
         el.innerHTML = `<div class="head"><span class="lbl">${m.name}</span><span class="desc">${m.desc}</span></div>
-          <div class="val"><span>--</span><small>${m.unit}</small></div><canvas style="height:64px"></canvas>`;
+          <div class="val"><span>--</span><small>${m.unit}</small></div><canvas style="height:64px"></canvas>
+          ${m.calibrable ? `<div class="bar cal"><button class="btn" data-a="center">Fijar centro</button>
+            <button class="btn" data-a="invert">Invertir</button><span class="muted st"></span></div>` : ""}`;
         $("cards").append(el);
-        c = cards[m.id] = {val: el.querySelector(".val span"), cv: el.querySelector("canvas")};
+        // calibración de la dirección: con la moto derecha, "Fijar centro"; si sale al revés, "Invertir"
+        el.querySelectorAll("button[data-a]").forEach(b => b.onclick = async () => {
+          const r = await (await fetch(`/api/steer/${b.dataset.a}`, {method: "POST"})).json();
+          if (!r.ok) alert("Todavía no hay lectura del sensor de dirección.");
+          live();
+        });
+        c = cards[m.id] = {val: el.querySelector(".val span"), cv: el.querySelector("canvas"), st: el.querySelector(".st")};
       }
+      if (c.st) c.st.textContent = steerText(d.steer);
       const x = d.values[m.id] || {}, stale = x.age == null || x.age > 3;
       c.val.textContent = x.v == null ? (x.no_data ? "N/D" : "--") : fmt(m, x.v);
       c.val.style.color = x.v == null || stale ? COL.stale : zone(m, x.v);

@@ -212,18 +212,16 @@ std::optional<SessionDetail> Store::session_detail(int id, std::size_t max_point
     if (!r.db) return std::nullopt;
     SessionDetail d;
     {
-        Stmt st(r.db,
-                "SELECT id, started, sim, COALESCE((SELECT MAX(t) FROM samples WHERE session = ?1), 0)"
-                " FROM sessions WHERE id = ?1");
+        Stmt st(r.db, "SELECT id, started, sim FROM sessions WHERE id = ?");
         if (!st) return std::nullopt;
         sqlite3_bind_int(st.s, 1, id);
         if (sqlite3_step(st.s) != SQLITE_ROW) return std::nullopt;
         d.row.id = sqlite3_column_int(st.s, 0);
         d.row.started = col_text(st.s, 1);
         d.row.sim = sqlite3_column_int(st.s, 2) != 0;
-        d.row.duration = sqlite3_column_double(st.s, 3);
     }
-    Stmt stats(r.db, "SELECT COUNT(*), MIN(value), MAX(value), AVG(value) FROM samples WHERE session = ? AND sensor = ?");
+    Stmt stats(r.db,
+               "SELECT COUNT(*), MIN(value), MAX(value), AVG(value), MAX(t) FROM samples WHERE session = ? AND sensor = ?");
     Stmt pts(r.db, "SELECT t, value FROM samples WHERE session = ? AND sensor = ? ORDER BY t");
     if (!stats || !pts) return std::nullopt;
 
@@ -238,6 +236,7 @@ std::optional<SessionDetail> Store::session_detail(int id, std::size_t max_point
             ss.min = sqlite3_column_double(stats.s, 1);
             ss.max = sqlite3_column_double(stats.s, 2);
             ss.avg = sqlite3_column_double(stats.s, 3);
+            if (ss.n > 0) d.row.duration = std::max(d.row.duration, sqlite3_column_double(stats.s, 4));
         }
         sqlite3_reset(stats.s);
         if (ss.n <= 0) continue;
@@ -305,12 +304,12 @@ bool Store::export_csv(int id, const std::function<bool(const std::string&)>& ou
                 for (char ch : sensor) q += ch == '"' ? std::string("\"\"") : std::string(1, ch);
                 sensor = q + "\"";
             }
-            buf += std::isfinite(t) ? fmt_num(t, 3) : "";
-            buf += ',';
+            char num[64];
+            std::snprintf(num, sizeof num, "%.3f,", t);
+            buf += num;
             buf += sensor;
-            buf += ',';
-            buf += std::isfinite(v) ? fmt_num(v, 4) : "";
-            buf += '\n';
+            std::snprintf(num, sizeof num, ",%.6g\n", v);
+            buf += num;
             if (buf.size() >= 64 * 1024) {
                 if (!out(buf)) return true;
                 buf.clear();

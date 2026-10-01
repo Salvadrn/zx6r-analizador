@@ -8,3 +8,4 @@ obd2_logs/
 *.db-wal
 *.db-shm
 cpp/build/
+!BOM.csv

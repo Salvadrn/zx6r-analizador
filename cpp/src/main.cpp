@@ -60,6 +60,7 @@ Config load_config() {
     c.obd_ip = env("OBD2_IP", "192.168.0.10");
     c.obd_port = env_int("OBD2_PORT", 35000);
     c.windowed = env_flag("OBD2_WINDOWED");
+    c.headless = env_flag("OBD2_HEADLESS");
     c.fps = std::clamp(env_int("OBD2_FPS", 30), 1, 240);
     c.db_path = expand_home(env("OBD2_DB", home_dir() + "/obd2_logs/telemetria.db"));
     c.web_port = env_int("OBD2_WEB_PORT", 8080);
@@ -107,8 +108,9 @@ int main() {
     std::printf("==========================================================\n");
     std::fflush(stdout);
 
-    if (!run_ui(cfg, tel, store, web, g_quit)) {   // sin pantalla: sigue leyendo, guardando y sirviendo
-        std::printf("[UI] No se pudo abrir la pantalla; sigo leyendo (Ctrl+C para salir)\n");
+    // Sin pantalla (OBD2_HEADLESS=1 o si no abre la ventana): sigue leyendo, guardando y sirviendo
+    if (cfg.headless || !run_ui(cfg, tel, store, web, g_quit)) {
+        if (!cfg.headless) std::printf("[UI] No se pudo abrir la pantalla; sigo leyendo (Ctrl+C para salir)\n");
         std::fflush(stdout);
         while (!g_quit) std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }

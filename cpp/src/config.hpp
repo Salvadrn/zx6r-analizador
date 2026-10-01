@@ -11,6 +11,7 @@ struct Config {
     std::string obd_ip = "192.168.0.10";    // OBD2_IP
     int obd_port = 35000;                   // OBD2_PORT
     bool windowed = false;                  // OBD2_WINDOWED=1: ventana 1280x720
+    bool headless = false;                  // OBD2_HEADLESS=1: sin pantalla (lee, guarda y sirve la web)
     int fps = 30;                           // OBD2_FPS
     std::string db_path;                    // OBD2_DB (default ~/obd2_logs/telemetria.db)
     int web_port = 8080;                    // OBD2_WEB_PORT (0 = apagado)

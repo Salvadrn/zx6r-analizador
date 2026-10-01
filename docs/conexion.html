@@ -1,0 +1,900 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>¿Cómo se conecta el tablero a la ZX-6R?</title>
+<style>
+html,body{margin:0}
+.hoja{
+  --tp:#1a1a1a; --ts:#5b5b5b; --s1:#ffffff; --s2:#f6f5f2; --bd:#e2dfda;
+  --pwr:#1f5e8b; --act:#7a2f2f; --sig:#8a6d00; --ok:#1e7d32; --bad:#b3261e; --dat:#6b3fa0; --off:#9e9e9e; --gnd:#1a1a1a;
+  --pwr-t:#1f5e8b; --sig-t:#8a6d00; --ok-t:#1e7d32; --bad-t:#b3261e; --dat-t:#6b3fa0;
+  color:var(--text-primary,var(--tp)); background:var(--surface-0,var(--s1));
+  font-family:var(--font-sans,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif);
+  font-size:14px; line-height:1.6; font-weight:400;
+  max-width:1180px; margin:0 auto; padding:18px 16px 56px; box-sizing:border-box;
+}
+@media (prefers-color-scheme:dark){
+  html{background:#141416}
+  .hoja{ --tp:#ececec; --ts:#a8a8a8; --s1:#141416; --s2:#1d1d20; --bd:#38383c; --gnd:#ececec;
+         --pwr-t:#6aa6d6; --sig-t:#d1b04a; --ok-t:#55b46a; --bad-t:#e5675f; --dat-t:#ad8fdc; }
+}
+.hoja *{box-sizing:border-box}
+.hoja h1{font-size:22px; font-weight:500; margin:0 0 6px; letter-spacing:-.01em; line-height:1.3}
+.hoja h2{font-size:16px; font-weight:500; margin:34px 0 12px; letter-spacing:.06em; text-transform:uppercase;
+  padding-bottom:6px; border-bottom:1px solid var(--border,var(--bd))}
+.hoja h3{font-size:14px; font-weight:500; margin:0 0 8px}
+.hoja p{margin:0 0 10px}
+.hoja a{color:var(--pwr-t)}
+.hoja .bajada{color:var(--text-secondary,var(--ts)); margin:0 0 18px; max-width:900px}
+.hoja .sub,.hoja .why{color:var(--text-secondary,var(--ts))}
+.hoja .why{font-size:13px; line-height:1.5}
+.hoja .tiny{font-size:12.5px}
+.hoja code,.hoja pre{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:12.5px}
+.hoja code{background:color-mix(in srgb,#9e9e9e 16%,transparent); padding:1px 5px; border-radius:4px}
+.hoja pre{background:var(--surface-1,var(--s2)); border:1px solid var(--border,var(--bd)); border-radius:8px;
+  padding:12px 14px; overflow-x:auto; line-height:1.5; margin:0 0 12px}
+.hoja .caja{background:var(--surface-1,var(--s2)); border:1px solid var(--border,var(--bd)); border-radius:8px; padding:16px 18px; margin-bottom:16px}
+.hoja .cols{display:grid; grid-template-columns:1fr 1fr; gap:2rem; align-items:start}
+.hoja .cols > *{min-width:0}
+@media (max-width:900px){ .hoja .cols{grid-template-columns:1fr; gap:1rem} }
+.hoja .banda{border-radius:8px; padding:14px 18px; margin:0 0 14px; border:2px solid}
+.hoja .banda h3{font-size:15px; margin:0 0 6px}
+.hoja .b-dat{border-color:#6b3fa0; background:color-mix(in srgb,#6b3fa0 9%,transparent)}
+.hoja .b-dat h3{color:var(--dat-t)}
+.hoja .b-ok{border-color:#1e7d32; background:color-mix(in srgb,#1e7d32 8%,transparent)}
+.hoja .b-ok h3{color:var(--ok-t)}
+.hoja .b-bad{border-color:#b3261e; background:color-mix(in srgb,#b3261e 8%,transparent)}
+.hoja .b-bad h3{color:var(--bad-t)}
+/* filas "a dónde va cada pin" */
+.hoja .lista h3{margin-top:4px; font-size:13px; letter-spacing:.06em; text-transform:uppercase; color:var(--text-secondary,var(--ts))}
+.hoja .fila{display:grid; grid-template-columns:24px 92px 1fr; gap:10px; align-items:start; padding:8px 0;
+  border-top:1px solid var(--border,var(--bd))}
+.hoja .fila:first-of-type{border-top:0}
+.hoja .chip{width:20px; height:20px; border-radius:3px; margin-top:2px}
+.hoja .nom{font-weight:500; font-size:13.5px; line-height:1.35}
+.hoja .dst{font-weight:500}
+.hoja .c-pwr{background:#1f5e8b} .hoja .c-sig{background:#8a6d00} .hoja .c-dat{background:#6b3fa0}
+.hoja .c-gnd{background:var(--gnd); outline:1px solid #9e9e9e} .hoja .c-off{background:#9e9e9e} .hoja .c-bad{background:#b3261e}
+.hoja .c-ok{background:#1e7d32}
+.hoja .t-pwr{color:var(--pwr-t)} .hoja .t-sig{color:var(--sig-t)} .hoja .t-dat{color:var(--dat-t)}
+.hoja .t-ok{color:var(--ok-t)} .hoja .t-bad{color:var(--bad-t)} .hoja .t-off{color:#9e9e9e}
+/* etiquetas */
+.hoja .pend{display:inline-block; font-size:12px; letter-spacing:.04em; text-transform:uppercase; line-height:1.4;
+  border:1px solid #b3261e; color:var(--bad-t); border-radius:4px; padding:0 6px; vertical-align:1px; white-space:nowrap}
+.hoja .conf{display:inline-block; font-size:12px; letter-spacing:.04em; text-transform:uppercase; line-height:1.4;
+  border:1px solid #9e9e9e; color:var(--text-secondary,var(--ts)); border-radius:4px; padding:0 6px; vertical-align:1px; white-space:nowrap}
+.hoja .okt{display:inline-block; font-size:12px; letter-spacing:.04em; text-transform:uppercase; line-height:1.4;
+  border:1px solid #1e7d32; color:var(--ok-t); border-radius:4px; padding:0 6px; vertical-align:1px; white-space:nowrap}
+/* conector KDS: 4 cables por color */
+.hoja .cables{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin:8px 0 6px}
+.hoja .cable{border:1px solid var(--border,var(--bd)); border-radius:6px; padding:8px 6px; text-align:center; font-size:12.5px; line-height:1.35}
+.hoja .cable .bar{height:8px; border-radius:2px; margin:0 0 6px}
+.hoja .cable b{font-weight:500; font-size:13.5px; display:block}
+/* cara OBD2 16 */
+.hoja .obd{display:grid; grid-template-columns:repeat(8,minmax(0,1fr)); gap:4px; max-width:360px; margin:8px 0 4px;
+  border:1.5px solid var(--text-primary,var(--tp)); border-radius:10px 10px 18px 18px; padding:8px 10px 10px}
+.hoja .obd div{text-align:center; font-size:12px; line-height:1.2; padding:4px 0; border-radius:3px; border:1px solid #9e9e9e; color:#9e9e9e}
+.hoja .obd .u-pwr{border-color:#1f5e8b; background:color-mix(in srgb,#1f5e8b 16%,transparent); color:var(--pwr-t); font-weight:500}
+.hoja .obd .u-gnd{border-color:var(--gnd); background:color-mix(in srgb,#9e9e9e 22%,transparent); color:var(--text-primary,var(--tp)); font-weight:500}
+.hoja .obd .u-dat{border-color:#6b3fa0; background:color-mix(in srgb,#6b3fa0 16%,transparent); color:var(--dat-t); font-weight:500}
+/* header de la Pi, pines 1-14 */
+.hoja .hdr{display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:4px; max-width:400px; margin:8px 0 2px}
+.hoja .hdr div{border:1px solid #9e9e9e; border-radius:4px; text-align:center; padding:4px 0 3px; font-size:12px; line-height:1.25; color:#9e9e9e}
+.hoja .hdr div b{display:block; font-weight:500; font-size:12.5px}
+.hoja .hdr .h-sig{border-color:#8a6d00; background:color-mix(in srgb,#8a6d00 16%,transparent); color:var(--sig-t)}
+.hoja .hdr .h-gnd{border-color:var(--gnd); background:color-mix(in srgb,#9e9e9e 24%,transparent); color:var(--text-primary,var(--tp))}
+.hoja .hdr .h-pwr{border-style:dashed; border-color:#1f5e8b; color:var(--pwr-t)}
+.hoja .hdr .h-bad{border-color:#b3261e; color:var(--bad-t); background:repeating-linear-gradient(135deg,transparent 0 5px,color-mix(in srgb,#b3261e 14%,transparent) 5px 8px)}
+.hoja .hdrlab{display:flex; justify-content:space-between; max-width:400px; font-size:12px; color:var(--text-secondary,var(--ts))}
+/* esquemáticos */
+.hoja .esq{overflow-x:auto; -webkit-overflow-scrolling:touch}
+.hoja .esq svg{display:block; width:100%; min-width:340px; height:auto; color:var(--text-primary,var(--tp))}
+.hoja svg text{font-family:inherit; fill:currentColor}
+.hoja svg .s{fill:var(--text-secondary,var(--ts))}
+.hoja svg .tp{fill:var(--pwr-t)} .hoja svg .tg{fill:var(--sig-t)} .hoja svg .td{fill:var(--dat-t)}
+.hoja svg .tk{fill:var(--ok-t)} .hoja svg .tb{fill:var(--bad-t)} .hoja svg .to{fill:#9e9e9e}
+.hoja svg .box{fill:var(--surface-1,var(--s2)); stroke:currentColor; stroke-width:1.3}
+.hoja svg .mask{fill:var(--surface-0,var(--s1))}
+.hoja .leyenda{display:flex; flex-wrap:wrap; gap:6px 16px; font-size:12.5px; color:var(--text-secondary,var(--ts)); margin:6px 0 0}
+.hoja .leyenda span{display:inline-flex; align-items:center; gap:6px}
+.hoja .leyenda i{display:inline-block; width:22px; height:0; border-top:3px solid}
+/* callouts */
+.hoja .dudas{display:grid; grid-template-columns:1fr 1fr; gap:1.25rem}
+@media (max-width:900px){ .hoja .dudas{grid-template-columns:1fr} }
+.hoja .co{border:2px solid; border-radius:8px; padding:16px 18px}
+.hoja .co-t{font-weight:500; margin-bottom:8px; font-size:15px; line-height:1.4}
+.hoja .co-b{font-size:14px; line-height:1.6}
+.hoja .co-b p{margin:0 0 8px}
+.hoja .co-b ul{margin:0 0 8px; padding-left:18px}
+.hoja .co-b li{margin-bottom:4px}
+.hoja .co-dat{border-color:#6b3fa0} .hoja .co-dat .co-t{color:var(--dat-t)}
+.hoja .co-pwr{border-color:#1f5e8b} .hoja .co-pwr .co-t{color:var(--pwr-t)}
+.hoja .co-ok{border-color:#1e7d32} .hoja .co-ok .co-t{color:var(--ok-t)}
+.hoja .co-bad{border-color:#b3261e} .hoja .co-bad .co-t{color:var(--bad-t)}
+/* tablas */
+.hoja .tabla{overflow-x:auto; -webkit-overflow-scrolling:touch; margin:0 0 12px}
+.hoja table{border-collapse:collapse; width:100%; font-size:13.5px; min-width:560px}
+.hoja th{text-align:left; font-weight:500; font-size:12px; letter-spacing:.05em; text-transform:uppercase;
+  color:var(--text-secondary,var(--ts)); padding:0 10px 8px 0; border-bottom:1px solid var(--border,var(--bd)); vertical-align:bottom}
+.hoja td{padding:9px 10px 9px 0; border-bottom:1px solid var(--border,var(--bd)); vertical-align:top}
+.hoja td:first-child{font-weight:500; white-space:nowrap}
+.hoja .grupo td{padding-top:16px; font-weight:500; letter-spacing:.05em; text-transform:uppercase; font-size:12px; color:var(--text-secondary,var(--ts))}
+.hoja ol,.hoja ul{margin:0 0 10px; padding-left:20px}
+.hoja li{margin-bottom:5px}
+.hoja .fuentes li{font-size:13px; line-height:1.5}
+</style>
+
+<div class="hoja">
+
+<h1>¿Cómo se conecta el tablero a la ZX-6R?</h1>
+<p class="bajada">Moto → conector de diagnóstico → ELM327 ⇢ WiFi ⇢ Raspberry Pi → pantalla, más botones y celular.
+Resuelve cuatro dudas: si el ELM327 se conecta directo a la moto, cómo alimentar la Pi sin matar la batería ni la microSD,
+si los botones llevan resistencia, y si el celular y la Pi caben juntos en el WiFi del ELM. Al final: qué comprar y en qué orden.</p>
+
+<div class="banda b-ok">
+  <h3>Medido contra no medido</h3>
+  <p style="margin:0">Nada de esta hoja se ha medido en tu moto. Sale de tu manual de servicio
+  (<b>Ninja ZX-6R / ZX-6R ABS 636, ZX636ED/FD, modelo 2013</b>), del código del repo y de fuentes citadas al final.
+  Lo que depende de una medición dice <span class="pend">por confirmar</span>. Si tu moto no es de esa generación (2013–2018),
+  confirma el conector antes de comprar el cable.</p>
+</div>
+
+<div class="banda b-dat">
+  <h3>Lo que cambia el plan: tu ECU habla KDS, no OBD2 estándar (casi seguro)</h3>
+  <p style="margin:0 0 6px">El cable sí se puede conectar. El problema es el idioma: la app pide PIDs estándar (<code>010C</code>, <code>0105</code>…)
+  y una Kawasaki de 2013 contesta en KDS, que usa otros comandos (<code>21 09</code> para RPM). Con la app tal cual, lo más probable es que
+  veas <b>SIN DATOS ECU</b> y solo funcione <b>BATERÍA</b>, porque ese valor lo mide el propio ELM327.</p>
+  <p style="margin:0">Antes de comprar la interfaz, haz la <a href="#prueba">prueba de 5 minutos</a> con el Steren que ya tienes.</p>
+</div>
+
+<!-- ======================================================= -->
+<h2>1 · La ruta de punta a punta</h2>
+
+<div class="cols">
+  <div>
+    <div class="esq">
+      <svg viewBox="0 0 400 540" role="img" aria-label="Diagrama de bloques: ECU, conector KDS, adaptador, ELM327, WiFi, Raspberry Pi, pantalla, botones, celular y la alimentación desde la batería">
+        <!-- columna de datos -->
+        <rect class="box" x="15" y="14" width="170" height="44" rx="6"/>
+        <text x="100" y="33" text-anchor="middle" font-size="13.5" font-weight="500">ECU</text>
+        <text x="100" y="50" text-anchor="middle" font-size="12" class="s">habla KDS (KWP2000)</text>
+        <line x1="55" y1="58" x2="55" y2="96" stroke="#1f5e8b" stroke-width="2.4"/>
+        <line x1="85" y1="58" x2="85" y2="96" stroke="currentColor" stroke-width="2.4"/>
+        <line x1="115" y1="58" x2="115" y2="96" stroke="#6b3fa0" stroke-width="2.4"/>
+        <line x1="145" y1="58" x2="145" y2="96" stroke="#6b3fa0" stroke-width="2.4"/>
+        <rect class="box" x="15" y="96" width="170" height="44" rx="6"/>
+        <text x="100" y="115" text-anchor="middle" font-size="13.5" font-weight="500">Conector KDS · 4 vías</text>
+        <text x="100" y="132" text-anchor="middle" font-size="12" class="s">bajo el asiento trasero</text>
+        <line x1="55" y1="140" x2="55" y2="160" stroke="#1f5e8b" stroke-width="2.4"/>
+        <line x1="85" y1="140" x2="85" y2="160" stroke="currentColor" stroke-width="2.4"/>
+        <line x1="115" y1="140" x2="115" y2="160" stroke="#6b3fa0" stroke-width="2.4"/>
+        <line x1="145" y1="140" x2="145" y2="160" stroke="#6b3fa0" stroke-width="2.4"/>
+        <rect class="box" x="15" y="160" width="170" height="44" rx="6"/>
+        <text x="100" y="179" text-anchor="middle" font-size="13.5" font-weight="500">Cable adaptador</text>
+        <text x="100" y="196" text-anchor="middle" font-size="12" class="s">Kawasaki 4 → OBD2 16</text>
+        <line x1="100" y1="204" x2="100" y2="222" stroke="currentColor" stroke-width="2.4"/>
+        <rect class="box" x="15" y="222" width="170" height="46" rx="6"/>
+        <text x="100" y="241" text-anchor="middle" font-size="13.5" font-weight="500">ELM327 Steren</text>
+        <text x="100" y="259" text-anchor="middle" font-size="12" class="s">AP 192.168.0.10 · TCP 35000</text>
+        <!-- símbolo WiFi -->
+        <path d="M84 292 a22 22 0 0 1 32 0" fill="none" stroke="#6b3fa0" stroke-width="2"/>
+        <path d="M90 299 a13 13 0 0 1 20 0" fill="none" stroke="#6b3fa0" stroke-width="2"/>
+        <circle cx="100" cy="305" r="2.6" fill="#6b3fa0"/>
+        <line x1="100" y1="268" x2="100" y2="284" stroke="#6b3fa0" stroke-width="1.6" stroke-dasharray="4 4"/>
+        <!-- WiFi a la Pi -->
+        <line x1="120" y1="300" x2="208" y2="338" stroke="#6b3fa0" stroke-width="2" stroke-dasharray="6 5"/>
+        <text x="132" y="338" font-size="12" class="td">WiFi</text>
+        <!-- celular -->
+        <line x1="100" y1="312" x2="100" y2="460" stroke="#6b3fa0" stroke-width="2" stroke-dasharray="6 5"/>
+        <text x="108" y="392" font-size="12" class="td">se une a la</text>
+        <text x="108" y="407" font-size="12" class="td">red del ELM</text>
+        <rect class="box" x="15" y="460" width="170" height="46" rx="6"/>
+        <text x="100" y="479" text-anchor="middle" font-size="13.5" font-weight="500">Celular (navegador)</text>
+        <text x="100" y="497" text-anchor="middle" font-size="12" class="s">http://IP-de-la-Pi:8080</text>
+        <polyline points="185,483 196,483 196,362 208,362" fill="none" stroke="#6b3fa0" stroke-width="2" stroke-dasharray="6 5"/>
+        <!-- columna de potencia -->
+        <rect class="box" x="208" y="14" width="180" height="44" rx="6"/>
+        <text x="298" y="33" text-anchor="middle" font-size="13.5" font-weight="500">Batería 12 V 8 Ah</text>
+        <text x="298" y="50" text-anchor="middle" font-size="12" class="s">14.3–14.7 V con motor</text>
+        <line x1="298" y1="58" x2="298" y2="80" stroke="#1f5e8b" stroke-width="2.4"/>
+        <rect class="box" x="208" y="80" width="180" height="44" rx="6"/>
+        <text x="298" y="99" text-anchor="middle" font-size="13.5" font-weight="500">Fusible propio 5 A</text>
+        <text x="298" y="116" text-anchor="middle" font-size="12" class="s">circuito que se apaga con la llave</text>
+        <line x1="298" y1="124" x2="298" y2="144" stroke="#1f5e8b" stroke-width="2.4"/>
+        <rect class="box" x="208" y="144" width="180" height="44" rx="6"/>
+        <text x="298" y="163" text-anchor="middle" font-size="13.5" font-weight="500">TVS SMBJ24A</text>
+        <text x="298" y="180" text-anchor="middle" font-size="12" class="tk">pico recortado ≤ 38.9 V ✓</text>
+        <line x1="298" y1="188" x2="298" y2="208" stroke="#1f5e8b" stroke-width="2.4"/>
+        <rect class="box" x="208" y="208" width="180" height="44" rx="6"/>
+        <text x="298" y="227" text-anchor="middle" font-size="13.5" font-weight="500">Convertidor 12 → 5 V</text>
+        <text x="298" y="244" text-anchor="middle" font-size="12" class="s">Pololu D36V50F5</text>
+        <line x1="298" y1="252" x2="298" y2="318" stroke="#1f5e8b" stroke-width="2.4"/>
+        <text x="306" y="282" font-size="12" class="tp">5 V · USB-C</text>
+        <text x="306" y="297" font-size="12" class="tk">3 A que pide ✓</text>
+        <!-- Pi -->
+        <rect class="box" x="208" y="318" width="180" height="64" rx="6" stroke-width="2"/>
+        <text x="298" y="340" text-anchor="middle" font-size="13.5" font-weight="500">Raspberry Pi 4</text>
+        <text x="298" y="357" text-anchor="middle" font-size="12" class="s">cliente WiFi · web :8080</text>
+        <text x="298" y="373" text-anchor="middle" font-size="12" class="s">GPIO17 · GPIO27 · GND</text>
+        <!-- pantalla -->
+        <line x1="255" y1="382" x2="255" y2="412" stroke="currentColor" stroke-width="2"/>
+        <text x="262" y="402" font-size="12" class="s">micro-HDMI</text>
+        <rect class="box" x="208" y="412" width="112" height="44" rx="6"/>
+        <text x="264" y="431" text-anchor="middle" font-size="13.5" font-weight="500">Pantalla</text>
+        <text x="264" y="448" text-anchor="middle" font-size="12" class="tb">por definir</text>
+        <!-- botones -->
+        <line x1="356" y1="382" x2="356" y2="476" stroke="#8a6d00" stroke-width="2.4"/>
+        <rect class="box" x="236" y="476" width="152" height="46" rx="6"/>
+        <text x="312" y="495" text-anchor="middle" font-size="13.5" font-weight="500">Botones ▶ ◀</text>
+        <text x="312" y="512" text-anchor="middle" font-size="12" class="s">en el manubrio</text>
+      </svg>
+    </div>
+    <div class="leyenda">
+      <span><i style="border-color:#1f5e8b"></i>potencia</span>
+      <span><i style="border-color:var(--gnd)"></i>tierra</span>
+      <span><i style="border-color:#6b3fa0"></i>datos (punteado = WiFi)</span>
+      <span><i style="border-color:#8a6d00"></i>señal de botones</span>
+    </div>
+  </div>
+
+  <div>
+    <h3>Dos caminos separados, una sola tierra</h3>
+    <p>El <b>dato</b> sale de la ECU por el conector de diagnóstico, entra al ELM327 y llega a la Pi por WiFi. No hay cable entre el ELM y la Pi.</p>
+    <p>La <b>energía</b> de la Pi no sale del conector de diagnóstico. Sale de la batería por un circuito con su propio fusible y pasa por el TVS y el convertidor.
+    La razón está en la sección 2: el +12 V de ese conector es el que alimenta a la ECU.</p>
+    <p>Las dos tierras terminan en el chasis: la del ELM por el cable BK/Y del conector y la de la Pi por el negativo del convertidor.
+    Como el ELM y la Pi solo se hablan por radio, no hace falta unir sus tierras con un cable.</p>
+    <p class="why">El celular no lee la moto: abre la página que sirve la Pi. Si abriera una app OBD, le quitaría la conexión a la Pi (ver la duda 4).</p>
+    <div class="caja" style="margin-top:14px">
+      <h3 class="t-dat">Plan B, si el Steren no pasa la prueba</h3>
+      <p style="margin:0">Se cambia el ELM WiFi por un <b>OBDLink EX</b> conectado por USB a la Pi. Así la Pi deja de depender del WiFi del ELM
+      y puede crear su propia red para el celular. El cable adaptador y todo lo demás se quedan igual.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================= -->
+<h2>2 · Moto → ELM327: el conector de diagnóstico</h2>
+
+<div class="cols">
+  <div class="lista">
+    <div class="caja">
+      <h3>La pieza como se ve: conector KDS de 4 cables</h3>
+      <p class="why" style="margin-bottom:6px">Está bajo el asiento trasero, junto al sensor de caída, con tapa (manual p. 107 foto [B]; p. 558).
+      Si tu moto es ABS (ZX636F), a un lado está el conector de autodiagnóstico <b>KIBS</b> (p. 701, n.º 10). Ese no es.</p>
+      <div class="cables">
+        <div class="cable"><div class="bar c-pwr"></div><b class="t-pwr">BR/W</b>café / blanco<br>+12 V</div>
+        <div class="cable"><div class="bar c-gnd"></div><b>BK/Y</b>negro / amarillo<br>tierra</div>
+        <div class="cable"><div class="bar c-dat"></div><b class="t-dat">LG/BK</b>verde claro / negro<br>comunicación</div>
+        <div class="cable"><div class="bar c-dat"></div><b class="t-dat">GY/W</b>gris / blanco<br>comunicación</div>
+      </div>
+      <p class="tiny sub" style="margin:0"><span class="pend">por confirmar</span> la posición física de cada cable. El manual solo da el diagrama (p. 578), no la cara del conector:
+      identifícalos por color, no por posición.</p>
+    </div>
+
+    <div class="caja">
+      <h3>El otro extremo del adaptador: OBD2 hembra de 16</h3>
+      <p class="why" style="margin-bottom:4px">Es donde se enchufa el ELM, visto de frente: 1–8 arriba y 9–16 abajo, igual que el puerto de un coche.</p>
+      <div class="obd">
+        <div>1</div><div>2</div><div>3</div><div class="u-gnd">4</div><div class="u-gnd">5</div><div>6</div><div class="u-dat">7</div><div>8</div>
+        <div>9</div><div>10</div><div>11</div><div>12</div><div>13</div><div>14</div><div class="u-dat">15</div><div class="u-pwr">16</div>
+      </div>
+      <p class="tiny sub" style="margin:4px 0 0">En gris: los pines que este cable no usa (6 y 14 son CAN; el CAN de tu moto no sale a este conector).</p>
+    </div>
+
+    <h3>A dónde va cada cable</h3>
+    <div class="fila"><div class="chip c-pwr"></div><div class="nom t-pwr">BR/W</div>
+      <div><div class="dst">→ pin 16 del OBD2 (+12 V del ELM)</div>
+      <div class="why">Es la alimentación de la ECU que sale del relevador principal: con la llave en OFF vale 0 V (p. 130).
+      Por eso el ELM se apaga con la moto. No cuelgues la Pi de este cable.</div></div></div>
+    <div class="fila"><div class="chip c-gnd"></div><div class="nom">BK/Y</div>
+      <div><div class="dst">→ pines 4 y 5 del OBD2 (tierra del ELM)</div>
+      <div class="why">Es tierra de la ECU (pines 39 y 65, p. 105). El ELM mide sus 12 V contra este cable, así que debe tener continuidad con el negativo de la batería.</div></div></div>
+    <div class="fila"><div class="chip c-dat"></div><div class="nom t-dat">LG/BK</div>
+      <div><div class="dst">→ pin 7 o 15 del OBD2</div>
+      <div class="why">Pin 31 de la ECU, «External Communication Line (Immobilizer/KDS)» (p. 105). Es una señal: no da ni recibe corriente.</div></div></div>
+    <div class="fila"><div class="chip c-dat"></div><div class="nom t-dat">GY/W</div>
+      <div><div class="dst">→ pin 15 o 7 del OBD2</div>
+      <div class="why">Pin 48 de la ECU, con la misma descripción. <span class="pend">por confirmar</span> cuál de las dos es la línea K (pin 7).
+      El manual no lo dice. En otra Kawasaki, el gris iba al 7 y el LG/BK al 15. Es un indicio, no una regla; el adaptador ya viene armado y lo resuelve.</div></div></div>
+    <div class="fila"><div class="chip c-off"></div><div class="nom t-off">Resto del OBD2</div>
+      <div><div class="dst t-off">sin conectar</div>
+      <div class="why">1, 2, 3, 6, 8–14: el adaptador no los cablea.</div></div></div>
+  </div>
+
+  <div>
+    <div class="esq">
+      <svg viewBox="0 0 400 400" role="img" aria-label="Esquemático: batería, fusibles y relevador de la ECU alimentan el cable BR/W, que llega a la ECU y al conector KDS; el adaptador lleva BR/W al pin 16, BK/Y a 4 y 5, y las dos líneas de comunicación a 7 y 15 del ELM327">
+        <!-- batería -->
+        <line x1="22" y1="22" x2="22" y2="40" stroke="#1f5e8b" stroke-width="2.6"/>
+        <line x1="30" y1="26" x2="30" y2="36" stroke="#1f5e8b" stroke-width="2.6"/>
+        <text x="16" y="56" font-size="12" class="s">batería</text>
+        <line x1="22" y1="31" x2="8" y2="31" stroke="currentColor" stroke-width="1.5"/>
+        <line x1="30" y1="31" x2="62" y2="31" stroke="#1f5e8b" stroke-width="2"/>
+        <rect class="box" x="62" y="12" width="236" height="40" rx="5"/>
+        <text x="180" y="28" text-anchor="middle" font-size="12.5">30 A principal → llave → 15 A →</text>
+        <text x="180" y="44" text-anchor="middle" font-size="12.5">relevador principal de la ECU</text>
+        <text x="306" y="36" font-size="12" class="s">p. 131</text>
+        <!-- bajada BR/W -->
+        <line x1="130" y1="52" x2="130" y2="120" stroke="#1f5e8b" stroke-width="2.4"/>
+        <text x="138" y="72" font-size="12" class="tp">0 V con llave OFF</text>
+        <text x="138" y="87" font-size="12" class="tp">batería con llave ON</text>
+        <text x="138" y="102" font-size="12" class="tk">14.3–14.7 V con motor ✓</text>
+        <!-- ECU -->
+        <rect class="box" x="10" y="100" width="70" height="200" rx="6" stroke-width="1.8"/>
+        <text x="45" y="210" text-anchor="middle" font-size="13.5" font-weight="500">ECU</text>
+        <text x="74" y="124" text-anchor="end" font-size="12" class="s">6</text>
+        <text x="74" y="174" text-anchor="end" font-size="12" class="s">31</text>
+        <text x="74" y="224" text-anchor="end" font-size="12" class="s">48</text>
+        <text x="74" y="274" text-anchor="end" font-size="12" class="s">39</text>
+        <!-- conector KDS -->
+        <rect x="186" y="104" width="16" height="188" rx="3" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        <text x="194" y="98" text-anchor="middle" font-size="12" font-weight="500">KDS</text>
+        <!-- filas -->
+        <line x1="80" y1="120" x2="186" y2="120" stroke="#1f5e8b" stroke-width="2.4"/>
+        <circle cx="130" cy="120" r="4" fill="#1f5e8b"/>
+        <text x="146" y="114" font-size="12" class="tp">BR/W</text>
+        <line x1="80" y1="170" x2="186" y2="170" stroke="#6b3fa0" stroke-width="2.4"/>
+        <text x="96" y="164" font-size="12" class="td">LG/BK</text>
+        <line x1="80" y1="220" x2="186" y2="220" stroke="#6b3fa0" stroke-width="2.4"/>
+        <text x="96" y="214" font-size="12" class="td">GY/W</text>
+        <line x1="80" y1="270" x2="186" y2="270" stroke="currentColor" stroke-width="2.4"/>
+        <text x="96" y="264" font-size="12">BK/Y</text>
+        <circle cx="150" cy="270" r="4" fill="currentColor"/>
+        <line x1="150" y1="270" x2="150" y2="318" stroke="currentColor" stroke-width="2"/>
+        <line x1="138" y1="318" x2="162" y2="318" stroke="currentColor" stroke-width="2"/>
+        <line x1="142" y1="323" x2="158" y2="323" stroke="currentColor" stroke-width="2"/>
+        <line x1="146" y1="328" x2="154" y2="328" stroke="currentColor" stroke-width="2"/>
+        <text x="166" y="326" font-size="12" class="s">chasis · 0 V</text>
+        <!-- adaptador -->
+        <line x1="202" y1="120" x2="300" y2="120" stroke="#1f5e8b" stroke-width="2.4"/>
+        <line x1="202" y1="170" x2="300" y2="170" stroke="#6b3fa0" stroke-width="2.4"/>
+        <line x1="202" y1="220" x2="300" y2="220" stroke="#6b3fa0" stroke-width="2.4"/>
+        <line x1="202" y1="270" x2="300" y2="270" stroke="currentColor" stroke-width="2.4"/>
+        <text x="251" y="112" text-anchor="middle" font-size="12" class="s">adaptador</text>
+        <!-- ELM -->
+        <rect class="box" x="300" y="100" width="92" height="200" rx="6" stroke-width="1.8"/>
+        <text x="346" y="96" text-anchor="middle" font-size="12" font-weight="500">ELM327</text>
+        <text x="308" y="124" font-size="12" class="tp">16 · +12 V</text>
+        <text x="308" y="174" font-size="12" class="td">7 ó 15</text>
+        <text x="308" y="224" font-size="12" class="td">15 ó 7</text>
+        <text x="308" y="274" font-size="12">4 + 5 · GND</text>
+        <text x="346" y="200" text-anchor="middle" font-size="12" class="s">K = 7</text>
+        <text x="346" y="215" text-anchor="middle" font-size="12" class="s">L = 15</text>
+        <!-- notas -->
+        <text x="10" y="356" font-size="12" class="td">Línea K: señal de 0–12 V, no alimenta nada.</text>
+        <text x="10" y="372" font-size="12" class="tb">¿GY/W o LG/BK es la K? El manual no lo dice.</text>
+        <text x="10" y="388" font-size="12" class="tk">ELM sin corriente con llave OFF → no drena la batería ✓</text>
+      </svg>
+    </div>
+    <p class="tiny sub" style="margin-top:6px">El punto en BR/W marca el nodo: el mismo cable alimenta el pin 6 de la ECU y llega al conector KDS.
+    El CAN de la moto (LB / GY-BL, pines 36 y 37) va de la ECU al tablero y al ABS; no sale a este conector (p. 105).</p>
+
+    <div class="caja" style="margin-top:12px">
+      <h3>Verifícalo con el multímetro antes de enchufar el ELM</h3>
+      <ol style="margin:0">
+        <li>Llave en OFF, adaptador puesto: el pin <b>16</b> debe marcar <b>0 V</b> contra el negativo de la batería.</li>
+        <li>Llave en ON: el pin <b>16</b> debe marcar el voltaje de la batería. Los pines <b>4 y 5</b> deben marcar 0 Ω contra el negativo de la batería.</li>
+        <li>Si los 12 V aparecen en el 7 o en el 15, el cable está mal armado. <b>No conectes el ELM.</b></li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================= -->
+<h2>3 · La Pi: botones y alimentación</h2>
+
+<div class="cols">
+  <div class="lista">
+    <div class="caja">
+      <h3>La pieza como se ve: pines 1–14 del header</h3>
+      <p class="why" style="margin-bottom:2px">Pi vista desde arriba, con el header en el borde de arriba y el pin 1 a la izquierda (orientación de la documentación oficial).</p>
+      <div class="hdrlab"><span>fila del borde (pares)</span></div>
+      <div class="hdr">
+        <div><b>2</b>5V</div><div><b>4</b>5V</div><div class="h-bad"><b>6</b>GND ✗</div><div><b>8</b>G14</div><div><b>10</b>G15</div><div><b>12</b>G18</div><div class="h-bad"><b>14</b>GND ✗</div>
+        <div class="h-pwr"><b>1</b>3V3 opc.</div><div><b>3</b>G2</div><div><b>5</b>G3</div><div><b>7</b>G4</div><div class="h-gnd"><b>9</b>GND</div><div class="h-sig"><b>11</b>G17</div><div class="h-sig"><b>13</b>G27</div>
+      </div>
+      <div class="hdrlab"><span>fila de adentro (impares)</span></div>
+      <p class="tiny sub" style="margin:8px 0 0">9, 11 y 13 son consecutivos en la misma fila: caben en un solo conector Dupont de 3 vías (GND · siguiente · anterior).
+      Los rayados (6 y 14) están <b>dañados en la Pi de membrane-rig</b>. Por eso la tierra va al 9, que funciona en esa Pi y en una nueva.</p>
+    </div>
+
+    <h3>A dónde va cada pin</h3>
+    <div class="fila"><div class="chip c-gnd"></div><div class="nom">pin 9 · GND</div>
+      <div><div class="dst">→ terminal común de los dos botones</div>
+      <div class="why">Es el retorno de los botones y va por su propio hilo hasta el manubrio, no al chasis, para que el ruido del arnés no entre por ahí.</div></div></div>
+    <div class="fila"><div class="chip c-sig"></div><div class="nom t-sig">pin 11 · GPIO17</div>
+      <div><div class="dst">→ botón ▶ siguiente (otra terminal a GND)</div>
+      <div class="why">El overlay lo convierte en la tecla → (keycode 106), que la versión Python y la de C++ ya leen como «siguiente».</div></div></div>
+    <div class="fila"><div class="chip c-sig"></div><div class="nom t-sig">pin 13 · GPIO27</div>
+      <div><div class="dst">→ botón ◀ anterior (otra terminal a GND)</div>
+      <div class="why">La tecla ← (keycode 105). Suelto marca 3.3 V y presionado 0 V.</div></div></div>
+    <div class="fila"><div class="chip c-pwr"></div><div class="nom t-pwr">pin 1 · 3.3 V</div>
+      <div><div class="dst">→ solo si pones el acondicionamiento opcional</div>
+      <div class="why">Alimenta los pull-ups externos de 4.7 kΩ. Si no los pones, se queda sin conectar.</div></div></div>
+    <div class="fila"><div class="chip c-pwr"></div><div class="nom t-pwr">USB-C</div>
+      <div><div class="dst">→ VOUT y GND del convertidor</div>
+      <div class="why">Es la entrada documentada de 5 V / 3 A. No uses los pines 2 y 4: en la Pi de membrane-rig, el 6 (la tierra de junto) está muerto.</div></div></div>
+    <div class="fila"><div class="chip c-dat"></div><div class="nom t-dat">micro-HDMI 0</div>
+      <div><div class="dst">→ pantalla</div>
+      <div class="why">La Pi 4 trae 2 micro-HDMI y un DSI. <span class="pend">por confirmar</span> la pantalla; la sugerida es HDMI y se alimenta aparte.</div></div></div>
+    <div class="fila"><div class="chip c-bad"></div><div class="nom t-bad">pines 6 y 14</div>
+      <div><div class="dst t-bad">→ nada (en la Pi de membrane-rig)</div>
+      <div class="why">Están dañados. Medir contra ellos da 0 V y continuidad abierta en todo, y una Pi sana parece muerta. El 14 está justo al lado del 13: no fuerces un cable ahí.</div></div></div>
+    <div class="fila"><div class="chip c-off"></div><div class="nom t-off">el resto</div>
+      <div><div class="dst t-off">sin conectar</div>
+      <div class="why">Si después compras una HAT de apagado (CarPiHAT), esa ocupa el 17 y el 27: ver «Qué comprar».</div></div></div>
+
+    <div class="caja" style="margin-top:14px">
+      <h3>En <code>/boot/firmware/config.txt</code>, con los comentarios en su propia línea</h3>
+<pre># Boton siguiente (flecha derecha) - pin 11
+dtoverlay=gpio-key,gpio=17,active_low=1,gpio_pull=up,keycode=106
+# Boton anterior (flecha izquierda) - pin 13
+dtoverlay=gpio-key,gpio=27,active_low=1,gpio_pull=up,keycode=105</pre>
+      <p class="why" style="margin:0">La documentación oficial dice que <code>config.txt</code> lleva un <code>propiedad=valor</code> por línea y que los comentarios empiezan la línea con <code>#</code>.
+      En el README, el comentario está al final de la línea del overlay; ahí no está documentado que funcione.</p>
+    </div>
+  </div>
+
+  <div>
+    <div class="esq">
+      <svg viewBox="0 0 400 330" role="img" aria-label="Esquemático del botón: pull-up interno de la Pi a 3.3 V, GPIO17 al botón por un cable de 1.5 metros, regreso al pin 9; en punteado, 1 kilo-ohm en serie, 100 nanofaradios a tierra y 4.7 kilo-ohm a 3.3 V">
+        <rect x="10" y="14" width="150" height="250" rx="8" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="5 4"/>
+        <text x="18" y="32" font-size="12" font-weight="500">Raspberry Pi 4</text>
+        <!-- 3.3 V y pull-up interno -->
+        <line x1="40" y1="46" x2="60" y2="46" stroke="#1f5e8b" stroke-width="2"/>
+        <text x="66" y="50" font-size="12" class="tp">3.3 V</text>
+        <line x1="50" y1="46" x2="50" y2="58" stroke="#1f5e8b" stroke-width="2"/>
+        <polyline points="50,58 57,62 43,68 57,74 43,80 57,86 43,92 50,96" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        <text x="62" y="76" font-size="12" class="s">33–73 kΩ</text>
+        <text x="62" y="91" font-size="12" class="s">interno</text>
+        <line x1="50" y1="96" x2="50" y2="120" stroke="#8a6d00" stroke-width="2"/>
+        <circle cx="50" cy="120" r="4" fill="#8a6d00"/>
+        <text x="18" y="142" font-size="12" class="tg">GPIO17 · pin 11</text>
+        <!-- 100 nF opcional -->
+        <line x1="50" y1="120" x2="110" y2="120" stroke="#8a6d00" stroke-width="2"/>
+        <circle cx="110" cy="120" r="3.4" fill="#8a6d00"/>
+        <line x1="110" y1="120" x2="110" y2="170" stroke="currentColor" stroke-width="1.4" stroke-dasharray="4 3"/>
+        <line x1="98" y1="170" x2="122" y2="170" stroke="currentColor" stroke-width="2"/>
+        <line x1="98" y1="177" x2="122" y2="177" stroke="currentColor" stroke-width="2"/>
+        <line x1="110" y1="177" x2="110" y2="236" stroke="currentColor" stroke-width="1.4" stroke-dasharray="4 3"/>
+        <text x="80" y="198" font-size="12" class="s">100 nF</text>
+        <!-- salida de la Pi -->
+        <line x1="110" y1="120" x2="172" y2="120" stroke="#8a6d00" stroke-width="2"/>
+        <!-- 1k serie opcional -->
+        <polyline points="172,120 176,113 182,127 188,113 194,127 200,113 206,127 210,120" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="3 2"/>
+        <text x="174" y="146" font-size="12" class="s">1 kΩ</text>
+        <line x1="210" y1="120" x2="240" y2="120" stroke="#8a6d00" stroke-width="2"/>
+        <circle cx="240" cy="120" r="3.4" fill="#8a6d00"/>
+        <!-- 4.7k a 3.3 V opcional -->
+        <line x1="240" y1="120" x2="240" y2="96" stroke="currentColor" stroke-width="1.4" stroke-dasharray="3 2"/>
+        <polyline points="240,96 247,92 233,86 247,80 233,74 247,68 240,64" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="3 2"/>
+        <line x1="240" y1="64" x2="240" y2="46" stroke="#1f5e8b" stroke-width="1.4" stroke-dasharray="3 2"/>
+        <line x1="230" y1="46" x2="250" y2="46" stroke="#1f5e8b" stroke-width="2"/>
+        <text x="254" y="50" font-size="12" class="tp">3.3 V · pin 1</text>
+        <text x="252" y="84" font-size="12" class="s">4.7 kΩ</text>
+        <!-- cable -->
+        <line x1="240" y1="120" x2="340" y2="120" stroke="#8a6d00" stroke-width="2.4"/>
+        <text x="252" y="112" font-size="12" class="s">cable ~1.5 m</text>
+        <!-- botón -->
+        <line x1="340" y1="120" x2="340" y2="148" stroke="#8a6d00" stroke-width="2"/>
+        <circle cx="340" cy="150" r="2.6" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        <circle cx="340" cy="178" r="2.6" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        <line x1="352" y1="146" x2="352" y2="182" stroke="currentColor" stroke-width="2"/>
+        <line x1="352" y1="164" x2="366" y2="164" stroke="currentColor" stroke-width="2"/>
+        <line x1="366" y1="158" x2="366" y2="170" stroke="currentColor" stroke-width="2"/>
+        <text x="296" y="168" font-size="12">▶</text>
+        <line x1="340" y1="181" x2="340" y2="236" stroke="currentColor" stroke-width="2"/>
+        <!-- retorno a GND -->
+        <line x1="340" y1="236" x2="50" y2="236" stroke="currentColor" stroke-width="2"/>
+        <circle cx="110" cy="236" r="3.4" fill="currentColor"/>
+        <circle cx="50" cy="236" r="4" fill="currentColor"/>
+        <text x="18" y="226" font-size="12">GND · pin 9</text>
+        <line x1="50" y1="236" x2="50" y2="252" stroke="currentColor" stroke-width="2"/>
+        <line x1="40" y1="252" x2="60" y2="252" stroke="currentColor" stroke-width="2"/>
+        <line x1="44" y1="257" x2="56" y2="257" stroke="currentColor" stroke-width="2"/>
+        <line x1="48" y1="262" x2="52" y2="262" stroke="currentColor" stroke-width="2"/>
+        <text x="186" y="230" font-size="12" class="s">su propio hilo, no el chasis</text>
+        <!-- voltajes -->
+        <text x="174" y="168" font-size="12" class="tg">suelto 3.3 V</text>
+        <text x="174" y="184" font-size="12" class="tg">presionado 0 V</text>
+        <text x="174" y="200" font-size="12" class="tk">3.3 V máx. ✓</text>
+        <!-- notas -->
+        <text x="10" y="290" font-size="12" class="s">Punteado: recomendado en la moto, opcional en la mesa.</text>
+        <text x="10" y="306" font-size="12" class="s">GPIO27 (pin 13, ◀) se cablea igual, con el mismo GND.</text>
+        <text x="10" y="322" font-size="12" class="tb">✗ El botón nunca va a 5 V ni a 12 V.</text>
+      </svg>
+    </div>
+
+    <div class="esq" style="margin-top:18px">
+      <svg viewBox="0 0 400 300" role="img" aria-label="Esquemático de alimentación: toma de fusible de 5 amperes en un circuito con llave, diodo TVS a tierra, convertidor Pololu D36V50F5 y salida de 5 volts al USB-C de la Pi">
+        <text x="10" y="18" font-size="12" font-weight="500">Alimentación mínima (sin apagado seguro)</text>
+        <rect class="box" x="10" y="34" width="86" height="58" rx="5"/>
+        <text x="53" y="54" text-anchor="middle" font-size="12">caja de</text>
+        <text x="53" y="69" text-anchor="middle" font-size="12">fusibles</text>
+        <text x="53" y="84" text-anchor="middle" font-size="12" class="s">con llave</text>
+        <line x1="96" y1="63" x2="112" y2="63" stroke="#1f5e8b" stroke-width="2.4"/>
+        <!-- fusible -->
+        <rect x="112" y="56" width="34" height="14" rx="3" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        <line x1="112" y1="63" x2="146" y2="63" stroke="currentColor" stroke-width="1.2"/>
+        <text x="129" y="50" text-anchor="middle" font-size="12">5 A</text>
+        <line x1="146" y1="63" x2="232" y2="63" stroke="#1f5e8b" stroke-width="2.4"/>
+        <circle cx="176" cy="63" r="4" fill="#1f5e8b"/>
+        <text x="150" y="30" font-size="12" class="tp">14.3–14.7 V con motor</text>
+        <!-- TVS -->
+        <line x1="176" y1="63" x2="176" y2="96" stroke="#1f5e8b" stroke-width="2"/>
+        <polygon points="168,112 184,112 176,98" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        <polyline points="166,94 168,98 184,98 186,102" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        <line x1="176" y1="112" x2="176" y2="150" stroke="currentColor" stroke-width="2"/>
+        <text x="190" y="106" font-size="12">TVS SMBJ24A</text>
+        <text x="190" y="121" font-size="12" class="s">banda (cátodo) al +</text>
+        <!-- Pololu -->
+        <rect class="box" x="232" y="40" width="88" height="96" rx="5" stroke-width="1.8"/>
+        <text x="276" y="30" text-anchor="middle" font-size="12" font-weight="500">D36V50F5</text>
+        <text x="238" y="67" font-size="12">VIN</text>
+        <text x="238" y="125" font-size="12">GND</text>
+        <text x="314" y="67" text-anchor="end" font-size="12">VOUT</text>
+        <text x="314" y="125" text-anchor="end" font-size="12">GND</text>
+        <text x="276" y="88" text-anchor="middle" font-size="12" class="to">EN · PG · VRP</text>
+        <text x="276" y="103" text-anchor="middle" font-size="12" class="to">sin conectar</text>
+        <line x1="320" y1="63" x2="352" y2="63" stroke="#1f5e8b" stroke-width="2.4"/>
+        <line x1="320" y1="121" x2="352" y2="121" stroke="currentColor" stroke-width="2.4"/>
+        <rect class="box" x="352" y="40" width="40" height="96" rx="5"/>
+        <text x="372" y="84" text-anchor="middle" font-size="12" font-weight="500">Pi</text>
+        <text x="372" y="99" text-anchor="middle" font-size="12" class="s">USB-C</text>
+        <!-- tierra común -->
+        <line x1="232" y1="121" x2="214" y2="121" stroke="currentColor" stroke-width="2"/>
+        <line x1="214" y1="121" x2="214" y2="150" stroke="currentColor" stroke-width="2"/>
+        <line x1="176" y1="150" x2="214" y2="150" stroke="currentColor" stroke-width="2"/>
+        <circle cx="196" cy="150" r="4" fill="currentColor"/>
+        <line x1="196" y1="150" x2="196" y2="166" stroke="currentColor" stroke-width="2"/>
+        <line x1="184" y1="166" x2="208" y2="166" stroke="currentColor" stroke-width="2"/>
+        <line x1="188" y1="171" x2="204" y2="171" stroke="currentColor" stroke-width="2"/>
+        <line x1="192" y1="176" x2="200" y2="176" stroke="currentColor" stroke-width="2"/>
+        <text x="214" y="176" font-size="12" class="s">negativo de batería / chasis</text>
+        <!-- voltajes -->
+        <text x="326" y="56" font-size="12" class="tp">5.0 V</text>
+        <text x="10" y="208" font-size="12" class="tk">TVS: deja pasar 14.7 V y recorta los picos a ≤ 38.9 V ✓</text>
+        <text x="10" y="224" font-size="12" class="tk">El D36V50F5 aguanta hasta 50 V en la entrada ✓</text>
+        <text x="10" y="240" font-size="12" class="tk">Salida 5 V ±4 %, hasta 5.5 A; la Pi pide 3 A ✓</text>
+        <text x="10" y="262" font-size="12" class="tb">✗ No tomes estos 12 V del BR/W del conector KDS:</text>
+        <text x="10" y="278" font-size="12" class="tb">un corto ahí funde el fusible de la ECU con la moto andando.</text>
+      </svg>
+    </div>
+    <p class="tiny sub" style="margin-top:6px">Cable de 5 V a la Pi corto y grueso (≥ 20 AWG): el Pololu da 5.0 V y la fuente oficial da 5.1 V, así que cualquier caída en el cable cuenta.
+    Con la Pi andando, <code>vcgencmd get_throttled</code> debe dar <code>0x0</code> (sin bajo voltaje).</p>
+  </div>
+</div>
+
+<!-- ======================================================= -->
+<h2>4 · WiFi: quién se conecta a quién</h2>
+
+<div class="cols">
+  <div>
+    <h3>Hoy, con el ELM327 WiFi</h3>
+    <div class="esq">
+      <svg viewBox="0 0 400 190" role="img" aria-label="Topología WiFi actual: el ELM327 es el punto de acceso; la Pi y el celular son clientes; solo la Pi abre el puerto 35000; el celular abre la página de la Pi en el puerto 8080">
+        <rect class="box" x="120" y="10" width="160" height="46" rx="6"/>
+        <text x="200" y="29" text-anchor="middle" font-size="13.5" font-weight="500">ELM327 (punto de acceso)</text>
+        <text x="200" y="47" text-anchor="middle" font-size="12" class="s">192.168.0.10</text>
+        <line x1="160" y1="56" x2="90" y2="122" stroke="#6b3fa0" stroke-width="2" stroke-dasharray="6 5"/>
+        <line x1="240" y1="56" x2="310" y2="122" stroke="#6b3fa0" stroke-width="2" stroke-dasharray="6 5"/>
+        <text x="20" y="84" font-size="12" class="td">TCP 35000: solo la Pi</text>
+        <text x="282" y="84" font-size="12" class="td">solo navegador</text>
+        <rect class="box" x="10" y="122" width="160" height="50" rx="6" stroke-width="2"/>
+        <text x="90" y="142" text-anchor="middle" font-size="13.5" font-weight="500">Raspberry Pi</text>
+        <text x="90" y="160" text-anchor="middle" font-size="12" class="s">192.168.0.50 (fija)</text>
+        <rect class="box" x="230" y="122" width="160" height="50" rx="6"/>
+        <text x="310" y="142" text-anchor="middle" font-size="13.5" font-weight="500">Celular</text>
+        <text x="310" y="160" text-anchor="middle" font-size="12" class="s">IP que reparte el ELM</text>
+        <line x1="230" y1="147" x2="176" y2="147" stroke="#6b3fa0" stroke-width="2"/>
+        <polygon points="170,147 180,142 180,152" fill="#6b3fa0"/>
+        <text x="200" y="186" text-anchor="middle" font-size="12" class="td">http://192.168.0.50:8080</text>
+      </svg>
+    </div>
+    <p class="tiny sub"><span class="pend">por confirmar</span> que el ELM pase tráfico entre clientes (celular → Pi) y cuántos clientes acepta. La IP .50 es una sugerencia:
+    debe quedar fuera del rango que reparte el ELM (mira qué IP le da a tu celular).</p>
+<pre>sudo nmcli dev wifi connect "Steren SCAN-020"
+sudo nmcli con mod "Steren SCAN-020" ipv4.method manual \
+  ipv4.addresses 192.168.0.50/24 ipv4.never-default yes \
+  connection.autoconnect-priority 20
+sudo nmcli con up "Steren SCAN-020"</pre>
+    <p class="why">El nombre de la red sale del instructivo del SCAN-020. Usa el que veas en tu celular. Con la prioridad 20, cuando el ELM prende (llave en ON), la Pi lo prefiere sobre el WiFi de tu casa.</p>
+  </div>
+
+  <div>
+    <h3>Plan B, con OBDLink EX por USB</h3>
+    <div class="esq">
+      <svg viewBox="0 0 400 190" role="img" aria-label="Topología con interfaz USB: el OBDLink EX va por USB a la Pi; la Pi crea su propia red WiFi; el celular se conecta a la red de la Pi">
+        <rect class="box" x="10" y="20" width="150" height="50" rx="6"/>
+        <text x="85" y="40" text-anchor="middle" font-size="13.5" font-weight="500">OBDLink EX</text>
+        <text x="85" y="58" text-anchor="middle" font-size="12" class="s">en el adaptador KDS</text>
+        <line x1="160" y1="45" x2="240" y2="45" stroke="#6b3fa0" stroke-width="2.6"/>
+        <text x="200" y="38" text-anchor="middle" font-size="12" class="td">USB</text>
+        <rect class="box" x="240" y="20" width="150" height="50" rx="6" stroke-width="2"/>
+        <text x="315" y="40" text-anchor="middle" font-size="13.5" font-weight="500">Raspberry Pi</text>
+        <text x="315" y="58" text-anchor="middle" font-size="12" class="s">crea su propia red</text>
+        <line x1="315" y1="70" x2="315" y2="122" stroke="#6b3fa0" stroke-width="2" stroke-dasharray="6 5"/>
+        <text x="323" y="100" font-size="12" class="td">WiFi de la Pi</text>
+        <rect class="box" x="240" y="122" width="150" height="50" rx="6"/>
+        <text x="315" y="142" text-anchor="middle" font-size="13.5" font-weight="500">Celular</text>
+        <text x="315" y="160" text-anchor="middle" font-size="12" class="s">navegador → :8080</text>
+        <text x="10" y="112" font-size="12" class="tk">Ninguna app del celular</text>
+        <text x="10" y="128" font-size="12" class="tk">puede quitarle el ELM a la Pi ✓</text>
+        <text x="10" y="150" font-size="12" class="s">sin límite de clientes del ELM</text>
+        <text x="10" y="166" font-size="12" class="s">y sin depender de su WiFi</text>
+      </svg>
+    </div>
+<pre>sudo nmcli device wifi hotspot ssid ZX6R password &lt;tu-clave&gt;</pre>
+    <p class="why">Esto requiere software: hoy la app solo habla TCP. Un puente de una línea (<code>socat</code> del puerto serie a <code>127.0.0.1:35000</code>) evitaría cambiar el código,
+    pero el tablero mostraría <code>WEB 127.0.0.1</code>, porque <code>_local_ip()</code> calcula la IP hacia <code>OBD2_IP</code>. Le toca a software; no lo probé.</p>
+  </div>
+</div>
+
+<!-- ======================================================= -->
+<h2>Dudas</h2>
+
+<div class="dudas">
+
+  <div class="co co-dat">
+    <div class="co-t">«¿El ELM327 se conecta directo a la moto?»</div>
+    <div class="co-b">
+      <p><b>No.</b> Tu moto no tiene el conector OBD2 de 16 pines. Tiene el <b>conector KDS</b> de Kawasaki, de 4 cables, bajo el asiento trasero.
+      Necesitas un cable adaptador «Kawasaki 4 pines → OBD2 16 hembra»; el ELM se enchufa en el lado de 16.</p>
+      <p>El cable es la parte fácil. El problema es el protocolo:</p>
+      <ul>
+        <li>El manual solo habla de <b>KDS</b>: los códigos se borran con «Kawasaki Diagnostic System (KDS Ver.3)» (p. 599).
+        El CAN de la moto es interno y no sale al conector.</li>
+        <li>KDS es KWP2000 (ISO 14230) por línea K a 10 400 baudios, con inicio rápido. Se le habla a la ECU en la dirección <code>0x11</code>
+        con su propio servicio <code>21</code> y un registro por dato: <code>21 09</code> = RPM, <code>21 06</code> = temperatura.
+        Las fórmulas tampoco son las de OBD2 (Kawaduino, KDS2Bluetooth).</li>
+        <li>En el foro de RaceChrono, un ELM327 en una Kawasaki de línea K «conectó, pero no recibió datos» pidiendo PIDs estándar (2017).
+        Otro usuario dice que las motos no traen OBD2 estándar antes de Euro 5 (2020–2021) y que hay que iniciar a mano:
+        <code>ATSP5</code>, <code>ATWM8011F1013E</code>, <code>ATSH8111F1</code>, <code>ATFI</code>, <code>ATSH8011F1</code> y luego <code>2109</code>.</li>
+      </ul>
+      <p><b>Qué tan seguro es:</b> alta certeza de que es KDS. Media-alta de que no contesta el modo 01: ninguna fuente probó una ZX-6R 2013 en particular.
+      En cinco minutos se sabe (<a href="#prueba">prueba</a>). Si la ECU no contesta modo 01, la app necesita hablar KDS; eso es trabajo de software, no de cableado.</p>
+      <p class="tiny sub" style="margin:0">Dato para software: en KDS cada consulta trae un solo valor y la ECU tarda ~120–140 ms en contestar (foro RaceChrono).
+      Son ~7 lecturas por segundo en total, repartidas entre todos los sensores, no 8 de O2. Y la O2 solo viene en algunos modelos («Equipped Models», p. 105).</p>
+    </div>
+  </div>
+
+  <div class="co co-pwr">
+    <div class="co-t">«¿Cómo alimento la Pi en la moto?»</div>
+    <div class="co-b">
+      <ul>
+        <li><b>Corriente:</b> la Pi 4 pide una fuente de 3.0 A (documentación oficial). Un convertidor de 5 A deja margen para picos: <b>Pololu D36V50F5</b>
+        (entrada 5.5–50 V, salida 5 V ±4 %, hasta 5.5 A, protección contra inversión hasta 40 V). Entra por el USB-C.</li>
+        <li><b>De dónde:</b> de un circuito que se apague con la llave, con su <b>propio fusible de 5 A</b>. Se toma con una toma de fusible en la caja de fusibles 1 o 2,
+        bajo la cubierta interior izquierda (p. 587). Elige un fusible que esté muerto con la llave en OFF y que no sea el de la ECU ni el de encendido.
+        El fusible protege el cable, no la Pi. Tu carga ronda 1.5–2 A a 12 V.</li>
+        <li><b>No del conector KDS:</b> su BR/W es la alimentación de la ECU (p. 104). Un corto en tu cableado funde el fusible de 15 A de la ECU con la moto andando.</li>
+        <li><b>Transitorios:</b> la norma automotriz ISO 16750-2 prueba picos por desconexión de batería de 79–101 V sin supresión y de 35 V con supresión (sistemas de 12 V).
+        En una moto, el caso feo es un borne flojo con el motor andando. El <b>TVS SMBJ24A</b> conduce arriba de ~27 V y recorta a ≤ 38.9 V, por debajo de los 50 V del Pololu.
+        Si el pico dura mucho, el TVS se lleva la corriente y se funde el fusible de 5 A: pierdes la Pi en ese viaje, pero no la quemas.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="co co-bad">
+    <div class="co-t">«¿Y si apago la moto con la Pi prendida? ¿El ELM se queda chupando batería?»</div>
+    <div class="co-b">
+      <p><b>La Pi:</b> con la alimentación mínima, al quitar la llave se corta de golpe. SQLite en modo WAL pierde a lo más el último lote (1 s);
+      lo que se puede dañar es la <b>microSD</b> (el sistema de archivos), y entonces la Pi no arranca. Hay dos salidas:</p>
+      <ul>
+        <li><b>Sin comprar nada:</b> raíz de solo lectura (<code>raspi-config</code> → 4 Performance → P2 Overlay File System) y la base en una USB con <code>OBD2_DB</code>.
+        Todo lo que no esté en la USB se borra en cada arranque.</li>
+        <li><b>Con una HAT de apagado:</b> la Pi toma 12 V permanentes y detecta la llave. Al quitar la llave se apaga sola y luego corta su corriente (CarPiHAT: menos de 1 mA apagada).</li>
+      </ul>
+      <p><b>El ELM:</b> según tu manual, no se queda prendido. El BR/W marca 0 V con la llave en OFF (p. 130, ECU Power Supply Inspection).
+      Mídelo de todos modos: si en tu moto alguien cambió el arnés y ese pin tuviera 12 V permanentes, el puro circuito de referencia del ELM327 (sin WiFi) gasta ~26 mA.
+      Eso son más de 0.6 Ah al día de una batería de 8 Ah.</p>
+      <p style="margin:0"><b>Y si alimentas el convertidor directo de la batería, sin pasar por la llave,</b> la Pi en reposo (~0.6 A a 5 V) te deja sin arranque en uno o dos días.</p>
+    </div>
+  </div>
+
+  <div class="co co-ok">
+    <div class="co-t">«¿Los botones llevan resistencia?»</div>
+    <div class="co-b">
+      <p><b>Para que funcione, no.</b> El overlay <code>gpio-key</code> con <code>gpio_pull=up</code> activa el pull-up interno (33–73 kΩ en la Pi 4),
+      y el botón solo une el GPIO con GND. Un botón es pasivo: no se alimenta. Suelto marca 3.3 V y presionado 0 V, que queda bajo los 0.8 V que la Pi 4 lee como «bajo».</p>
+      <p><b>Nunca a 5 V ni a 12 V.</b> El GPIO es de 3.3 V. Un botón cableado a 5 V mete 5 V a una entrada de 3.3 V cada vez que lo presionas, y además nunca se lee
+      «presionado», porque el pull-up ya lo tiene arriba. Los interruptores originales del manubrio (pasar luces, claxon) conmutan 12 V: no los conectes al GPIO.</p>
+      <p><b>En la moto conviene acondicionarlos</b> (lo punteado del esquemático):</p>
+      <ul>
+        <li>El overlay no tiene parámetro de antirrebote. Sus únicos parámetros son gpio, active_low, gpio_pull, label, keycode y autorepeat.
+        El driver usa 5 ms por defecto. Si un toque cuenta doble, el filtro de 1 kΩ + 100 nF ayuda.</li>
+        <li>Con 1.5 m de cable junto a bobinas e inyectores, ese filtro también se come las espigas de ruido.</li>
+        <li>Con el pull-up interno pasan 45–100 µA, poco para que el contacto se limpie solo con el tiempo. Un pull-up externo de 4.7 kΩ sube eso a 0.7 mA.</li>
+      </ul>
+      <p style="margin:0">Botón sellado IP67, cable de 3 hilos (siguiente, anterior, GND) ruteado con el arnés y con holgura para el giro del manubrio.</p>
+    </div>
+  </div>
+
+  <div class="co co-dat">
+    <div class="co-t">«¿El celular y la Pi pueden estar en el WiFi del ELM327 al mismo tiempo?»</div>
+    <div class="co-b">
+      <p><b>Tal vez. Hay que probarlo.</b> Hay tres límites:</p>
+      <ul>
+        <li><b>Una sola conexión al ELM:</b> «ELM327 device can't be used by several apps or devices at the same time» (Car Scanner).
+        Si el celular tiene abierta una app OBD (la que recomienda Steren es E OBD2 Facile), le gana el puerto 35000 a la Pi. En el celular, solo el navegador.</li>
+        <li><b>Clientes del punto de acceso:</b> el instructivo del Steren no da el límite. Car Scanner advierte que incluso dos dispositivos en la misma red OBD pueden impedir que uno se conecte.</li>
+        <li><b>Tráfico entre clientes:</b> para que el celular abra la página de la Pi, el ELM tiene que pasar paquetes entre ellos. No está documentado.</li>
+      </ul>
+      <p style="margin:0"><b>IP fija para la Pi:</b> <code>nmcli</code> sobre la conexión del ELM, fuera del rango que reparte el ELM, como pide la documentación oficial.
+      Si falla cualquiera de los tres límites, la salida limpia es el plan B (OBDLink EX por USB + red propia de la Pi).</p>
+    </div>
+  </div>
+
+  <div class="co co-bad">
+    <div class="co-t">«¿Qué pasa si algo se suelta a media rodada?»</div>
+    <div class="co-b">
+      <ul>
+        <li><b>Llave en ON:</b> el BR/W sube a 12 V, el ELM prende y levanta su WiFi, la Pi arranca y la app reintenta cada 2 s hasta conectar (CONECTANDO).</li>
+        <li><b>Se zafa el ELM:</b> se cae el TCP y la app muestra SIN CONEXIÓN. A los 3 s los valores se ponen grises y no se confunden con datos vivos. Reintenta sola.</li>
+        <li><b>Se corta el cable de un botón:</b> con el pull-up, un cable abierto se lee «suelto». El botón deja de funcionar y nada más.</li>
+        <li><b>El cable de un botón se pela y toca el chasis:</b> se lee «presionado» todo el tiempo. Lo más probable es que en Python la vista avance sola por la repetición de tecla.
+        En C++ no pasa, porque raylib usa <code>IsKeyPressed</code>.</li>
+        <li><b>El cable de un botón toca 12 V:</b> se muere el GPIO, o la Pi. Para eso es el 1 kΩ en serie, y por eso el cable va lejos de los cables de 12 V.</li>
+        <li><b>Corto en la alimentación de la Pi:</b> se funde su fusible de 5 A, no el de la ECU. La moto sigue andando.</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+<!-- ======================================================= -->
+<h2 id="prueba">5 · Prueba de 5 minutos en la moto, antes de comprar la interfaz</h2>
+
+<div class="cols">
+  <div>
+    <p>Necesitas el cable adaptador, el Steren y la Pi (o una laptop) conectada al WiFi del Steren. Llave en ON con el motor apagado basta.
+    Nada de esto escribe en la ECU: abre una sesión de lectura y pide RPM.</p>
+<pre>python3 - &lt;&lt;'EOF'
+import socket, time
+s = socket.create_connection(("192.168.0.10", 35000), 5)
+def tx(cmd, t=4):
+    s.sendall((cmd + "\r").encode())
+    buf, end = b"", time.time() + t
+    while b"&gt;" not in buf and time.time() &lt; end:
+        s.settimeout(max(0.1, end - time.time()))
+        try:
+            buf += s.recv(512)
+        except socket.timeout:
+            break
+    out = buf.decode(errors="ignore").replace(chr(13), " ")
+    print(f"{cmd:&lt;16}{out.strip(' &gt;')}")
+for c in ["ATZ", "ATE0", "ATI", "ATRV", "ATSP0"]: tx(c)
+tx("0100", 15)
+for c in ["ATSP5", "ATWM8011F1013E", "ATSH8111F1"]: tx(c)
+tx("ATFI", 10)
+tx("ATSH8011F1")
+tx("1080", 6)
+tx("2109", 6)
+EOF</pre>
+    <p class="why">Si <code>ATFI</code> falla, espera 10 s antes de repetir: después de cortar la sesión, la ECU tarda en aceptar otra (Kawaduino).</p>
+  </div>
+  <div>
+    <div class="tabla">
+      <table style="min-width:420px">
+        <tr><th>Comando</th><th>Si ves…</th><th>Quiere decir</th></tr>
+        <tr><td>ATI</td><td>ELM327 v1.5 / v2.1…</td><td>La versión que dice tu clon. Anótala.</td></tr>
+        <tr><td>ATRV</td><td>12.x V</td><td class="t-ok">El adaptador le da +12 V y tierra al ELM ✓</td></tr>
+        <tr><td>0100</td><td>41 00 …</td><td class="t-ok">La ECU sí habla OBD2 estándar: la app sirve tal cual.</td></tr>
+        <tr><td>0100</td><td>UNABLE TO CONNECT / NO DATA</td><td>No habla OBD2 estándar. Es lo esperado.</td></tr>
+        <tr><td>ATWM / ATSH</td><td>?</td><td class="t-bad">Tu clon no acepta un inicio a la medida: no sirve para KDS → OBDLink EX.</td></tr>
+        <tr><td>ATFI</td><td>BUS INIT: OK</td><td class="t-ok">El ELM despertó a la ECU por la línea K ✓</td></tr>
+        <tr><td>ATFI</td><td>BUS INIT: …ERROR</td><td>La K está en el pin equivocado del adaptador o la ECU no contestó. Espera 10 s y repite.</td></tr>
+        <tr><td>1080</td><td>50 80</td><td class="t-ok">Sesión KDS abierta ✓</td></tr>
+        <tr><td>2109</td><td>61 09 xx yy</td><td class="t-ok">RPM por KDS. La interfaz sirve; falta que la app hable KDS.</td></tr>
+      </table>
+    </div>
+    <p class="tiny sub">El orden de inicio viene del foro de RaceChrono y la sesión <code>10 80</code> de Kawaduino (una Z1000SX 2013). Es una receta de la comunidad, no probada en tu moto.</p>
+  </div>
+</div>
+
+<!-- ======================================================= -->
+<h2>6 · Qué comprar, en orden</h2>
+
+<div class="tabla">
+  <table>
+    <tr><th>#</th><th>Qué</th><th>Marca y modelo</th><th>Para qué, y por qué esa</th></tr>
+    <tr class="grupo"><td colspan="4">Seguro: sirve con cualquier interfaz</td></tr>
+    <tr><td>1</td><td>Cable adaptador KDS</td><td>«Kawasaki 4 pin → OBD2 16 pin» hembra. P. ej. lydesor, Amazon <a href="https://www.amazon.com/dp/B0D1PBD3BG">B0D1PBD3BG</a> (dice ZX6R / ZX10R / ZX1000). No pude abrir su ficha.</td>
+      <td>Une el KDS con el ELM o con el OBDLink. Para saber que es el correcto: (1) que entre en el conector de 4 vías de la p. 107 [B], no en el KIBS ni en uno de 6;
+      (2) con continuidad, cuatro hilos: uno al 16, uno al 4 y al 5, y dos al 7 y al 15; (3) en la moto, la medición de la sección 2.</td></tr>
+    <tr><td>2</td><td>Raspberry Pi dedicada</td><td>Raspberry Pi 4 Model B, 2 o 4 GB</td><td>La de membrane-rig está en uso en el laboratorio. Pi 4 y no Pi 5: pide 3 A en vez de 5 A, y el resto de la lista está pensado para Pi 4.</td></tr>
+    <tr><td>3</td><td>microSD</td><td>SanDisk High Endurance 32 GB (SDSQQNR-032G-GN6IA)</td><td>Hecha para escritura continua (cámaras de tablero), de −25 a 85 °C.</td></tr>
+    <tr><td>4</td><td>Convertidor 12 → 5 V</td><td>Pololu D36V50F5 (<a href="https://www.pololu.com/product/4091">#4091</a>)</td><td>Entrada de 5.5–50 V, 5 V ±4 %, 5.5 A, inversión hasta 40 V, 1″ × 1″.
+      El D24V50F5 no: su máximo es 38 V, por debajo de lo que deja pasar el TVS (38.9 V). Más un cable USB-C solo de energía, ≥ 20 AWG y ≤ 30 cm.</td></tr>
+    <tr><td>5</td><td>Protección contra picos</td><td>Littelfuse SMBJ24A (TVS de 600 W)</td><td>Bloquea 24 V (deja pasar los 14.7 V de carga) y recorta a ≤ 38.9 V. Va junto a la entrada del Pololu, con la banda al +.</td></tr>
+    <tr><td>6</td><td>Fusible propio</td><td>Littelfuse Add-A-Circuit 0FHA0200ZP (fusible ATO) o FHM200BP (mini)</td><td>Toma un circuito con llave sin cortar cables, con su fusible de 5 A.
+      <span class="pend">por confirmar</span> el tipo de fusible de tu caja: abre la tapa antes de comprar (p. 587).</td></tr>
+    <tr><td>7</td><td>Botones</td><td>2× Schurter MSM 16, momentáneos (inox, IP67) en una abrazadera para 22 mm impresa en tu Bambu.
+      Alternativa armada: motogadget mo.switch mini (3 botones, 22.2 mm, cable de 2 m, US$144)</td>
+      <td>Los Schurter son IP67 certificados. Del mo.switch mini solo encontré «a prueba de salpicaduras», no IP67. <span class="pend">por confirmar</span> el diámetro del manubrio con un vernier.</td></tr>
+    <tr><td>8</td><td>Pantalla legible al sol</td><td>Newhaven NHD-5.0-HDMI-N-RSXP-CTU (5″, <b>900 nits</b>, US$89.20). Si cabe una de 7″: NHD-7.0-HDMI-N-RSXN (<b>1000 nits</b> típ., 800 mín., US$98.36)</td>
+      <td>HDMI, 800 × 480, de −20 a 70 °C, se alimenta con 5–7 V (la de 7″ gasta 0.73 A a 5 V). La de 5″ mide 136 × 76 × 18 mm. Más un cable micro-HDMI → HDMI corto.</td></tr>
+    <tr><td>9</td><td>Montaje de la pantalla</td><td>RAM Mounts RAM-B-176U</td><td>Base que entra en el hueco del vástago de la dirección (12–38 mm), con bola de 1″, hasta 2 lb. La pantalla se fija con una base impresa.
+      <span class="pend">por confirmar</span> el hueco del vástago de tu moto.</td></tr>
+    <tr><td>10</td><td>Caja de la Pi</td><td>Hammond 1554N2GYSL (IP68, 119 × 119 × 61 mm)</td><td>Cabe la Pi 4 (85 × 56 mm) con el convertidor. <span class="pend">por confirmar</span> que quepa bajo el asiento.</td></tr>
+    <tr class="grupo"><td colspan="4">Elige una forma de apagar</td></tr>
+    <tr><td>11a</td><td>Apagado seguro</td><td>TJD CarPiHAT (para Pi 4). £73 en The Pi Hut, agotada al 2026-10-01; también se vende en Tindie</td>
+      <td>Detecta la llave por BCM12, mantiene su propia corriente con BCM25, apaga la Pi y luego se corta (&lt; 1 mA apagada). Trae su convertidor de 12 → 5 V.
+      <b>Ojo: ocupa GPIO17 (entrada IN_2) y GPIO27 (salida OUT_0).</b> Con ella, los botones pasan a GPIO19 y GPIO26 (pines 35 y 37, GND en el 39, también consecutivos).
+      Necesita 12 V permanentes de la batería con su propio fusible, además de la señal de llave. Su guía pide ventilador arriba de 1.5 A.</td></tr>
+    <tr><td>11b</td><td>Sin comprar</td><td>Overlay File System + base en una USB</td><td>Es gratis. Cortar la corriente ya no daña el sistema, pero todo lo que no esté en la USB se pierde en cada arranque.</td></tr>
+    <tr class="grupo"><td colspan="4">Condicional: después de la prueba de 5 minutos</td></tr>
+    <tr><td>12</td><td>Interfaz de diagnóstico</td><td><b>OBDLink EX</b> (USB), US$69.95</td><td>La recomiendo si el Steren contesta «?» a <code>ATWM</code>/<code>ATFI</code> o no logra BUS INIT, y también si falla lo del WiFi.
+      Usa el chip STN2232, maneja ISO 14230-4 (KWP2000), su manual dice que <code>ATFI</code> y <code>ATWM</code> están soportados,
+      trabaja de 8 a 30 V con 6.5 mA y de −20 a 55 °C. En la Pi aparece como puerto serie (chip FTDI).
+      Es USB y no Bluetooth: no hay que emparejar nada y libera el WiFi de la Pi.</td></tr>
+  </table>
+</div>
+
+<div class="caja">
+  <h3 class="t-bad">No compres</h3>
+  <ul style="margin:0">
+    <li><b>Otro ELM327 genérico</b> (WiFi o Bluetooth, «v1.5», «v2.1»). Los clones baratos no dejan reprogramar el inicio, la dirección ni los mensajes de mantenimiento (foro RaceChrono); en una prueba con una Suzuki, contestaron «?» a casi todo.</li>
+    <li><b>Cables Kawasaki de 6 pines o «Euro5» de 6 pines.</b> Son de otros conectores: el de tu moto es de 4 cables.</li>
+    <li><b>HealTech OBD-K01.</b> Lee y borra códigos desde Windows, pero no le pasa datos a tu app.</li>
+    <li><b>Juice4halt.</b> Su hoja de datos lo limita a 1 A promedio y lo hizo para Pi B+, 2 y 3. Se queda corto para una Pi 4.</li>
+    <li><b>Mausberry «4amp Car Supply».</b> Su entrada máxima es de 18 V, sin margen para picos, y está agotado.</li>
+    <li><b>Cable KKL (FTDI).</b> Funciona solo si decides programar KWP2000 tú mismo. El chip STN ya lo hace.</li>
+    <li><b>Pantallas SPI de 3.5″ que se montan sobre el header.</b> La Waveshare (A) usa el pin 11 (GPIO17) para el táctil y tapa el 13.</li>
+  </ul>
+</div>
+
+<!-- ======================================================= -->
+<h2>Pendiente de confirmar, y cómo</h2>
+<ol>
+  <li><b>Que tu moto sea de la generación del manual</b> (2013–2018, ZX636E/F): con la tarjeta de circulación o el VIN. Y si es ABS (F), porque entonces trae el conector KIBS junto al KDS.</li>
+  <li><b>BR/W en 0 V con la llave en OFF en tu moto:</b> con el multímetro en el pin 16 del adaptador. El manual dice 0 V (p. 130).</li>
+  <li><b>Cuál de GY/W y LG/BK es la línea K:</b> el adaptador lo resuelve. Si <code>ATFI</code> da error con todo lo demás bien, sospecha del mapeo del cable.</li>
+  <li><b>Si la ECU contesta el modo 01 y si tu Steren acepta el inicio KDS:</b> con la prueba de 5 minutos.</li>
+  <li><b>El modelo exacto de tu Steren</b> (¿SCAN-020?), el nombre de la red, cuántos clientes acepta y si pasa tráfico entre ellos: mira la etiqueta y prueba abrir <code>:8080</code> desde el celular.</li>
+  <li><b>El tipo de fusible y qué circuito está muerto con la llave en OFF:</b> abre la caja (p. 587) y mide. Que no sea el de la ECU ni el de encendido.</li>
+  <li><b>El diámetro del manubrio y el hueco del vástago:</b> con un vernier.</li>
+  <li><b>Espacio y temperatura bajo el asiento:</b> la ficha de la Pi 4 la especifica para 0–50 °C. Mide un día de calor con el motor caliente.</li>
+  <li><b>La pantalla elegida:</b> cuánto consume y si se alimenta del mismo convertidor.</li>
+</ol>
+
+<h2>Fuentes</h2>
+<ul class="fuentes">
+  <li><b>Tu manual de servicio</b>, Ninja ZX-6R / ZX-6R ABS 636 (ZX636ED/FD, 2013), <code>~/Downloads/NinjaManual.pdf</code>: pines de la ECU pp. 104–105;
+  ubicación del KDS p. 107 [B]; tapa del conector p. 558; circuito del inmovilizador/KDS p. 578; alimentación de la ECU con llave OFF/ON p. 130;
+  circuito de alimentación, batería 12 V 8 Ah y fusibles p. 131; voltaje de carga 14.3–14.7 V p. 494; cajas de fusibles p. 587; KDS Ver.3 p. 599; conectores bajo el asiento p. 701.</li>
+  <li>Protocolo KDS (0x11/0xF1, inicio rápido, servicio 21, tiempos de ISO 14230-2): <a href="https://github.com/tomnz/kawaduino">Kawaduino</a>;
+  <a href="https://github.com/HerrRiebmann/KDS2Bluetooth">KDS2Bluetooth</a>, con una foto del pinout del KDS en otra Kawasaki que marca «+12V SWITCHED».</li>
+  <li>Foro de RaceChrono (archivo): <a href="http://web.archive.org/web/20251113123653/http://racechrono.com/forum/discussion/2108/elm327-connection-help-pid-needed-ducati-kawasaki-triumph-and-honda">hilo 2108</a> (receta de inicio; los clones no la aceptan; OBD2 hasta Euro 5);
+  <a href="http://web.archive.org/web/20200717154257/http://www.racechrono.com:80/forum/discussion/1423/obd-with-racechrono-pro-on-motorbike">hilo 1423</a> («connected but didn't get any data»);
+  <a href="http://web.archive.org/web/20250624072605/http://www.racechrono.com/forum/discussion/1724/suzuki-sds-and-kawasaki-kds-bus-was-newbie-question-regarding-bike-obd">hilo 1724</a> (~120–140 ms por respuesta; un valor por consulta en KDS).</li>
+  <li>Conector KDS bajo el asiento en la ZX-6R 2005–2006: <a href="https://www.healtech-electronics.com/docs/Supplementary%20Manuals/OBD-K01__Kawasaki_ZX-6R__2005-2006.pdf">HealTech OBD-K01</a>.
+  Mapeo de otra Kawasaki (GY/BL → 7, LG/BK → 15, BR/W → 16, BK/W → 4 + 5): kawiforums, «semi-transparent 4-pole male diagnostic connector (KDS)».</li>
+  <li>Steren <a href="https://descargas.steren.com.mx/SCAN-020-instr.pdf">SCAN-020</a>: red «Steren SCAN-020», protocolos (incluye ISO 14230-4 de inicio rápido), «compatible con su automóvil (2006 en adelante)».</li>
+  <li><a href="https://cdn.sparkfun.com/assets/learn_tutorials/8/3/ELM327DS.pdf">Hoja de datos del ELM327</a>: conector J1962, 25.7 mA del circuito de referencia.
+  <a href="https://www.carscanner.info/ios-wifi-troubleshooting/">Car Scanner</a>: una app o dispositivo a la vez.</li>
+  <li><a href="https://www.obdlink.com/products/obdlink-ex/">OBDLink EX</a>; <a href="https://www.scantool.net/downloads/98/stn1100-frpm.pdf">manual de la familia STN</a> (EX = STN2230/2232; ATFI y ATWM soportados);
+  <a href="https://digitalcommons.calpoly.edu/cgi/viewcontent.cgi?article=1232&amp;context=cpesp">M3 Pi, Cal Poly</a> (OBDLink EX en una Raspberry Pi, FTDI FT230X).</li>
+  <li>Raspberry Pi: <a href="https://github.com/raspberrypi/documentation/blob/develop/documentation/asciidoc/computers/raspberry-pi/power-supplies.adoc">fuentes</a> (3.0 A para Pi 4);
+  <a href="https://github.com/raspberrypi/documentation/blob/develop/documentation/asciidoc/computers/raspberry-pi/gpio-on-raspberry-pi.adoc">GPIO</a> (BCM2711: pull-up de 33–73 kΩ, V<sub>IL</sub> ≤ 0.8 V);
+  <a href="https://github.com/raspberrypi/documentation/blob/develop/documentation/asciidoc/computers/config_txt/what_is_config_txt.adoc">formato de config.txt</a>;
+  <a href="https://github.com/raspberrypi/documentation/blob/develop/documentation/asciidoc/computers/configuration/performance.adoc">Overlay File System</a>;
+  <a href="https://github.com/raspberrypi/documentation/blob/develop/documentation/asciidoc/computers/configuration/configuring-networking.adoc">redes con nmcli</a>;
+  <a href="https://datasheets.raspberrypi.com/rpi4/raspberry-pi-4-product-brief.pdf">ficha de la Pi 4</a> (2 micro-HDMI, DSI, 0–50 °C).</li>
+  <li>Overlay <code>gpio-key</code>: <a href="https://github.com/raspberrypi/linux/blob/rpi-6.12.y/arch/arm/boot/dts/overlays/README">README de overlays</a>;
+  antirrebote de 5 ms por defecto: <a href="https://github.com/torvalds/linux/blob/master/Documentation/devicetree/bindings/input/gpio-keys.yaml">gpio-keys.yaml</a>;
+  KEY_LEFT = 105, KEY_RIGHT = 106: <a href="https://github.com/torvalds/linux/blob/master/include/uapi/linux/input-event-codes.h">input-event-codes.h</a>.</li>
+  <li>Picos ISO 16750-2 (79–101 V sin supresión, 35 V con supresión): <a href="https://www.ti.com/lit/pdf/snoaaa1">TI SNOAAA1</a>.
+  <a href="https://www.digikey.com/en/products/detail/littelfuse-inc/SMBJ24A/285994">SMBJ24A</a>; Pololu <a href="https://www.pololu.com/product/4091">D36V50F5</a> y <a href="https://www.pololu.com/product/2851">D24V50F5</a>;
+  Littelfuse <a href="https://www.littelfuse.com/products/fuses-overcurrent-protection/fuse-holders-fuse-blocks-accessories/fuse-holders/in-line-fuse-holders/add-a-circuit-ato/0fha0200zp">Add-A-Circuit 0FHA0200ZP</a>.</li>
+  <li>CarPiHAT: <a href="https://github.com/gecko242/CarPiHat/wiki/Quick-Start-Guide">guía</a> (BCM25, BCM12, IN_2 = BCM17, OUT_0 = BCM27) y <a href="https://thepihut.com/products/carpihat-car-interface-hat-for-raspberry-pi">The Pi Hut</a>;
+  <a href="https://juice4halt.com/wp-content/uploads/2017/11/datasheet20-5V.pdf">Juice4halt</a>; <a href="https://www.mausberrycircuits.com/collections/frontpage/products/4amp-car-supply-switch">Mausberry</a>.</li>
+  <li>Pantallas Newhaven <a href="https://newhavendisplay.com/5-0-inch-ips-capacitive-hdmi-tft-module/">5″</a> y <a href="https://newhavendisplay.com/7-0-inch-sunlight-readable-hdmi-tft-module-without-touchscreen/">7″</a>;
+  <a href="https://www.motogadget.com/en-us/products/mo-switch-mini">mo.switch mini</a>; <a href="https://www.mouser.com/catalog/specsheets/schurter_typ_msm_16.pdf">Schurter MSM 16</a>;
+  <a href="https://rammount.com/products/ram-b-176u">RAM-B-176U</a>; <a href="https://www.hammfg.com/electronics/small-case/plastic/1554">Hammond 1554</a>;
+  <a href="https://www.waveshare.com/wiki/3.5inch_RPi_LCD_(A)">Waveshare 3.5″ (A)</a>.</li>
+  <li>Repo: <code>python/analizador.py</code> (192.168.0.10:35000, :8080, <code>ATSP0</code>, PIDs, <code>BTN_*_GPIO</code>, teclas), <code>README.md</code> (overlay gpio-key) y
+  <code>~/Desktop/membrane-rig/INVENTORY.md</code> (pines 6 y 14 dañados en la Pi 4 de reemplazo).</li>
+</ul>
+
+</div>

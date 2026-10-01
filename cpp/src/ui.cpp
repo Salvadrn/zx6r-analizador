@@ -343,7 +343,8 @@ public:
         rlEnd();
     }
 
-    // Línea gruesa continua con uniones en inglete (con tope) para que no queden huecos entre segmentos
+    // Línea gruesa: en vueltas suaves los segmentos comparten esquina (inglete); en vueltas cerradas
+    // (picos de la O2) cada segmento termina recto y la unión se redondea, como las líneas de Tk
     void polyline(const std::vector<Vector2>& in, float thick, Color c) {
         pts_.clear();
         for (const Vector2& p : in)
@@ -355,22 +356,38 @@ public:
             return Vector2{dx / l, dy / l};
         };
         const float hw = thick / 2;
+        dirs_.resize(n - 1);
+        for (std::size_t i = 0; i + 1 < n; ++i) dirs_[i] = dir(pts_[i], pts_[i + 1]);
         left_.resize(n);
         right_.resize(n);
+        sharp_.assign(n, 0);
         for (std::size_t i = 0; i < n; ++i) {
-            const Vector2 d0 = i > 0 ? dir(pts_[i - 1], pts_[i]) : dir(pts_[0], pts_[1]);
-            const Vector2 d1 = i + 1 < n ? dir(pts_[i], pts_[i + 1]) : d0;
+            const Vector2 d0 = dirs_[i > 0 ? i - 1 : 0];
+            const Vector2 d1 = dirs_[i + 1 < n ? i : n - 2];
             const Vector2 t{d0.x + d1.x, d0.y + d1.y};
             const float tl = std::sqrt(t.x * t.x + t.y * t.y);
-            const Vector2 nrm = tl > 1e-3f ? Vector2{-t.y / tl, t.x / tl} : Vector2{-d0.y, d0.x};
-            const float half_cos = nrm.x * -d0.y + nrm.y * d0.x;   // coseno del medio ángulo de la vuelta
-            const float m = hw / std::max(half_cos, 0.3f);
+            const float half_cos = tl / 2;   // coseno de la mitad del ángulo de la vuelta
+            if (half_cos < 0.5f) {           // vuelta de más de 120°
+                sharp_[i] = 1;
+                continue;
+            }
+            const Vector2 nrm{-t.y / tl, t.x / tl};
+            const float m = hw / half_cos;
             left_[i] = {pts_[i].x + nrm.x * m, pts_[i].y + nrm.y * m};
             right_[i] = {pts_[i].x - nrm.x * m, pts_[i].y - nrm.y * m};
         }
         rlBegin(RL_TRIANGLES);
         rlColor4ub(c.r, c.g, c.b, c.a);
-        for (std::size_t i = 0; i + 1 < n; ++i) quad(left_[i], right_[i], left_[i + 1], right_[i + 1]);
+        for (std::size_t i = 0; i + 1 < n; ++i) {
+            const Vector2 nrm{-dirs_[i].y * hw, dirs_[i].x * hw};   // extremo recto del segmento
+            const Vector2 l0 = sharp_[i] ? Vector2{pts_[i].x + nrm.x, pts_[i].y + nrm.y} : left_[i];
+            const Vector2 r0 = sharp_[i] ? Vector2{pts_[i].x - nrm.x, pts_[i].y - nrm.y} : right_[i];
+            const Vector2 l1 = sharp_[i + 1] ? Vector2{pts_[i + 1].x + nrm.x, pts_[i + 1].y + nrm.y} : left_[i + 1];
+            const Vector2 r1 = sharp_[i + 1] ? Vector2{pts_[i + 1].x - nrm.x, pts_[i + 1].y - nrm.y} : right_[i + 1];
+            quad(l0, r0, l1, r1);
+        }
+        for (std::size_t i = 0; i < n; ++i)   // unión redonda en las vueltas cerradas
+            if (sharp_[i]) fan(pts_[i], hw);
         rlEnd();
     }
 
@@ -389,7 +406,19 @@ private:
         rlVertex2f(d.x, d.y);
     }
 
-    std::vector<Vector2> outer_, inner_, pts_, left_, right_;
+    // Círculo chico (dentro de un rlBegin(RL_TRIANGLES) ya abierto)
+    static void fan(Vector2 p, float r) {
+        constexpr int SEG = 10;
+        for (int k = 0; k < SEG; ++k) {
+            const float a0 = 2 * PI * static_cast<float>(k) / SEG, a1 = 2 * PI * static_cast<float>(k + 1) / SEG;
+            rlVertex2f(p.x, p.y);
+            rlVertex2f(p.x + std::cos(a0) * r, p.y + std::sin(a0) * r);
+            rlVertex2f(p.x + std::cos(a1) * r, p.y + std::sin(a1) * r);
+        }
+    }
+
+    std::vector<Vector2> outer_, inner_, pts_, left_, right_, dirs_;
+    std::vector<char> sharp_;
 };
 
 // =====================================================

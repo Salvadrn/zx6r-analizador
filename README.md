@@ -56,6 +56,25 @@ flowchart LR
   WEB -- WiFi --> PH["Celular / laptop"]
 ```
 
+## Pretest (antes de comprar casi todo)
+
+Con el cable adaptador y tu ELM327 se sabe en unos minutos si la moto habla OBD2 estándar o KDS, y si tu ELM327 lo entiende. Conecta la computadora al WiFi del ELM327, pon la llave en ON con el motor apagado y corre:
+
+```bash
+python3 tools/pretest.py
+```
+
+No necesita instalar nada. Solo **lee** datos: no borra códigos ni escribe en la ECU. Al final te dice una de estas cuatro cosas:
+
+- habla OBD2 estándar y la app funciona tal cual, con la lista de qué sensores contestan;
+- habla KDS y tu ELM327 lo entiende, así que no compres otra interfaz (la app necesita su modo KDS);
+- tu ELM327 es un clon que no acepta el inicio KDS: compra el OBDLink EX;
+- la ECU no contestó, con qué revisar.
+
+El registro completo queda en `~/obd2_logs/pretest_<fecha>.txt`.
+
+Para ver cómo se ve cada resultado sin la moto: `python3 tools/pretest.py --demo kds`. Las otras opciones de `--demo` son `obd2`, `clon` y `sin-ecu`.
+
 ## Qué comprar
 
 La lista completa está en **[`BOM.csv`](BOM.csv)**, con precio aproximado en pesos y liga de cada pieza (precios del 2026-10-01). Va en fases:
@@ -237,6 +256,7 @@ cpp/                   versión C++ (CMake)
 web/index.html         visor web; lo sirven las dos versiones
 docs/conexion.html     hoja de conexión
 BOM.csv                lista de materiales con precios y ligas
+tools/pretest.py       pretest: ¿OBD2 estándar o KDS? (antes de comprar)
 docs/*.png, *.jpg      capturas para este README
 ```
 

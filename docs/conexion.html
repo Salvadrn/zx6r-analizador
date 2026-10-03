@@ -969,6 +969,7 @@ sudo nmcli con up "Steren SCAN-020"</pre>
   <div>
     <p>Necesitas el cable adaptador, el Steren y la Pi (o una laptop) conectada al WiFi del Steren. Llave en ON con el motor apagado basta.
     Nada de esto escribe en la ECU: abre una sesión de lectura y pide RPM.</p>
+    <p><b>La forma fácil:</b> <code>python3 tools/pretest.py</code> desde la carpeta del repo. Hace esta misma prueba, interpreta cada respuesta, te dice qué comprar y guarda el registro en <code>~/obd2_logs/</code>. Abajo está la versión a mano, por si no tienes el repo.</p>
 <pre>python3 - &lt;&lt;'EOF'
 import socket, time
 s = socket.create_connection(("192.168.0.10", 35000), 5)
